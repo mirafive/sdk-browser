@@ -2,6 +2,7 @@ import { describe, expect, expectTypeOf, it, vi } from "vitest"
 
 import { identity } from "../src/identity.ts"
 import type { Mira, MiraCore, Plugin } from "../src/index.ts"
+import { pageviews } from "../src/pageviews.ts"
 import {
   HOST,
   KEY,
@@ -9,6 +10,7 @@ import {
   beacon,
   define,
   events,
+  factory,
   fetchMock,
   json,
   load,
@@ -751,6 +753,7 @@ describe("review fixes", () => {
     ["clear()", (client: Mira) => client.use({ name: "x", setup: (core) => core.clear() })],
     ["destroy()", (client: Mira) => client.destroy()]
   ])("cancels a batch waiting for a retry on %s", async (_, stop) => {
+    vi.spyOn(Math, "random").mockReturnValue(0.5)
     route(() => json({}, 503))
     const client = await mira()
 
@@ -789,11 +792,11 @@ describe("review fixes", () => {
   })
 })
 
-const loader = async () => {
+const loader = async (more: Plugin[] = []) => {
   let core: MiraCore | undefined
   const client = await mira({
     mode: "full",
-    plugins: [{ name: "identity", setup: (given) => void (core = given) }]
+    plugins: [{ name: "identity", setup: (given) => void (core = given) }, ...more]
   })
 
   return { client, core: core as MiraCore }
@@ -844,6 +847,39 @@ describe("hold()", () => {
     await client.flush()
 
     expect(events()).toHaveLength(100)
+  })
+
+  it("resends the page viewed before the grant, and a navigation during the hold once", async () => {
+    const { client, core } = await loader([pageviews()])
+
+    await tick()
+    core.hold()
+    history.pushState({}, "", "/checkout")
+    await tick()
+    w.__mirafive_consent = { statistics: true }
+    client.use(identity())
+    await client.flush()
+
+    expect(events().map((event) => [event.name, event.page?.url])).toEqual([
+      ["$pageview", "https://shop.example/pricing?utm_source=news"],
+      ["$pageview", "https://shop.example/checkout"]
+    ])
+  })
+
+  it("counts a landing pageview held before identity arrives once", async () => {
+    let core: MiraCore | undefined
+    const client = (await factory())({
+      mode: "full",
+      plugins: [{ name: "identity", setup: (given) => void (core = given) }, pageviews()]
+    })
+
+    core?.hold()
+    await tick()
+    w.__mirafive_consent = { statistics: true }
+    client.use(identity())
+    await client.flush()
+
+    expect(names()).toEqual(["$pageview"])
   })
 
   it("holds nothing without hold()", async () => {

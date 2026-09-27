@@ -221,7 +221,16 @@ export const createMira = <Events extends EventMap = EventMap>(options: MiraOpti
   }
 
   const enqueue = (event: MiraEvent): void => {
-    if ((mode === "full" && state.mode !== "full") || !emit("beforeSend", event)) {
+    if (mode === "full" && state.mode !== "full") {
+      // identity resends it on a grant; a held pageview never lands here.
+      if (event.name === "$pageview") {
+        state.dropped = event.page
+      }
+
+      return
+    }
+
+    if (!emit("beforeSend", event)) {
       return
     }
 

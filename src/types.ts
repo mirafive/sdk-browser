@@ -103,6 +103,8 @@ export interface MiraState {
   hash?: boolean
   /** The last pageview's page, sent or not. */
   page?: Page
+  /** The last pageview's page that mode "full" dropped for want of consent (not one held by `hold()`). */
+  dropped?: Page | undefined
   /** The consent answer; `undefined` until one is given (identity). */
   consent?: ConsentAnswer
   /** `1` when the consent answer was known when the page first drew (identity). */

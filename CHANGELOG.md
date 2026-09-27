@@ -4,7 +4,7 @@
 
 First release on the v1 ingest protocol, rebuilt from scratch around plugins.
 
-- `createMira()` core (2.46 kB): batched `text/plain` delivery to `/v1/batch/{key}`,
+- `createMira()` core (2.48 kB): batched `text/plain` delivery to `/v1/batch/{key}`,
   `sendBeacon` on page hide with a `keepalive` fallback, retries with full-jitter
   backoff and `Retry-After`, Do Not Track / GPC / `__mirafive_ignore` / prerendering /
   local-host guards, a double-boot guard, typed events, and stubs that warn in

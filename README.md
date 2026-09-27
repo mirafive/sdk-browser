@@ -7,17 +7,17 @@ websites and web apps, hosted in the EU, with one small import per feature.
 
 | Import | min + gzip |
 |---|---|
-| `@mirafive/sdk-browser` (`createMira`) | 2.46 kB |
-| `…` + `@mirafive/sdk-browser/pageviews` | 2.75 kB |
-| `@mirafive/sdk-browser/identity` | 1.14 kB |
+| `@mirafive/sdk-browser` (`createMira`) | 2.48 kB |
+| `…` + `@mirafive/sdk-browser/pageviews` | 2.76 kB |
+| `@mirafive/sdk-browser/identity` | 1.13 kB |
 | `@mirafive/sdk-browser/autocapture` | 0.86 kB |
 | `@mirafive/sdk-browser/search` | 0.40 kB |
 | `@mirafive/sdk-browser/flags` (includes the flag evaluator) | 2.91 kB |
 | `@mirafive/sdk-browser/experiments` | 0.47 kB |
-| everything together | 7.30 kB |
+| everything together | 7.31 kB |
 
 What you do not import is not shipped (`sideEffects: false`, one entry per feature).
-A consentless site with automatic pageviews ships 2.75 kB. Each plugin row is measured
+A consentless site with automatic pageviews ships 2.76 kB. Each plugin row is measured
 on its own, as a bundler adds it to a page that already has the core.
 
 ## Install
@@ -265,6 +265,7 @@ export const outboundLinks = (): Plugin => ({
 | `context` | core | sent with every batch; framework packages leave `sdk` unchanged (the hosted tracker sets its own name) |
 | `hash` | pageviews | hash routing |
 | `page` | core | the last pageview's page, sent or not |
+| `dropped` | core | the last pageview dropped for want of consent (never a held one); identity resends it on the grant |
 | `consent`, `boot`, `user`, `aid()` | identity | the answer, `$boot`, the user, the anonymous id (minted on first use, only with a consent scope) |
 | `flags` | flags | the loaded flag state |
 
@@ -278,7 +279,9 @@ Between a consent grant and identity arriving, call `core.hold()`: events (pagev
 autocapture, `track`) are then kept in a buffer of at most 100 instead of dropped.
 identity releases the buffer when it applies an answer: with statistics consent the
 events are queued with their original times and the new ids; otherwise they are
-dropped. `core.release(keep)` ends holding by hand. Without `hold()` events before the
+dropped. Only the page viewed before holding began is resent, so a navigation during the
+hold, or a landing pageview that was itself held, counts once. `core.release(keep)`
+ends holding by hand. Without `hold()` events before the
 grant are dropped as usual (the landing pageview is resent either way).
 
 Add `flags()` before `experiments()`.

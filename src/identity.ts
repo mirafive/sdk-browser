@@ -15,7 +15,6 @@ export const identity = (): Plugin => ({
     const ns = keyNamespace(core.options.key)
     const prefix = `mirafive:${ns}:`
     const memory: Record<string, string | undefined> = {}
-    let resent = false
     // Memory stands in only once storage has thrown; otherwise a stale tab would restore ids another tab removed.
     let broken = false
 
@@ -122,10 +121,10 @@ export const identity = (): Plugin => ({
           claim(state.user.id)
         }
 
-        // The landing page was viewed before the answer; without this, consenting on it loses it.
-        if (!resent && state.page) {
-          resent = true
-          core.send("$pageview", undefined, state.page)
+        // The page viewed before the answer; without this, consenting on it loses it. Held pages send themselves.
+        if (state.dropped) {
+          core.send("$pageview", undefined, state.dropped)
+          state.dropped = undefined
         }
       } else {
         if (state.mode === "full") {
