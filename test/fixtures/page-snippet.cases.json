@@ -1,0 +1,661 @@
+{
+    "v": 1,
+    "snippets": {
+        "random": {
+            "key": "hero",
+            "ingestKey": "mf_7kq2ab3x_0123456789abcdefghijklmnopqrstuv",
+            "origins": [
+                "https://example.com"
+            ],
+            "hosts": [
+                "example.com",
+                "www.example.com"
+            ],
+            "namespace": "mf_7kq2ab3x",
+            "hash": "fa1adf55",
+            "style": "html:not([data-mirafive-hero=\"b\"]) [data-mirafive-experiment=\"hero\"]:not([data-mirafive-variant=\"a\"]),html[data-mirafive-hero=\"b\"] [data-mirafive-experiment=\"hero\"]:not([data-mirafive-variant=\"b\"]){display:none!important}",
+            "script": "(function(k,s,W,V,H,N,R,U,X){var w=window,d=document,n=navigator,l=location,c=w.__mirafive_consent,i,v,j,b,q=l.search.match(\"[?&]mirafive-preview=\"+k+\":([a-z0-9-]+)\");function S(x){d.documentElement.setAttribute(\"data-mirafive-\"+k,x)}function A(m){var t=Date.now(),x,p,e,y;try{x=localStorage.getItem(m)}catch(_){}if(x==null)return;y=x.indexOf(\".\");e=y<0?t:Number(x.slice(y+1));p=y<0?x:x.slice(0,y);if(p!==\"\"&&isFinite(e)&&t-e<31536e6)return p}function F(t){for(var h=2166136261,z=0,u=unescape(encodeURIComponent(t));z<u.length;z++)h=Math.imul(h^u.charCodeAt(z),16777619)>>>0;return h}function G(){var r=w.crypto,a,t=\"\",z;if(r.randomUUID)return r.randomUUID();a=r.getRandomValues(new Uint8Array(16));a[6]=a[6]&15|64;a[8]=a[8]&63|128;for(z=0;z<16;z++)t+=(z==4||z==6||z==8||z==10?\"-\":\"\")+(a[z]+256).toString(16).slice(1);return t}if(q&&V.indexOf(q[1])>=0)return S(q[1]);if(H.indexOf(l.hostname)<0||Date.now()>U||n.doNotTrack==\"1\"||n.globalPrivacyControl||w.__mirafive_ignore||d.prerendering)return S(V[0]);if(c&&c.experiments===true)i=A(\"mirafive:\"+N+\":aid\");if(!i&&R&&(c===void 0||c&&c.experiments===true))i=w.__mirafive_aid_next=w.__mirafive_aid_next||G();if(i)for(b=F(\"\"+F(s+\".v\"+i))%1e4,j=0;j<V.length&&!v;j++)if((b-=W[j])<0)v=V[j];S(v=v||V[0]);if(i)(w.__mirafive_experiments=w.__mirafive_experiments||[]).push({k:k,v:v,s:s,w:W,m:R?\"r\":\"o\",h:X,b:c===void 0?0:1})})(\"hero\",\"k3j9x0a1b2c3\",[5000,5000],[\"a\",\"b\"],[\"example.com\",\"www.example.com\"],\"mf_7kq2ab3x\",1,1805552000000,\"fa1adf55\")"
+        },
+        "original": {
+            "key": "hero",
+            "ingestKey": "mf_7kq2ab3x_0123456789abcdefghijklmnopqrstuv",
+            "origins": [
+                "https://example.com"
+            ],
+            "hosts": [
+                "example.com",
+                "www.example.com"
+            ],
+            "namespace": "mf_7kq2ab3x",
+            "hash": "8624a0de",
+            "style": "html:not([data-mirafive-hero=\"b\"]) [data-mirafive-experiment=\"hero\"]:not([data-mirafive-variant=\"a\"]),html[data-mirafive-hero=\"b\"] [data-mirafive-experiment=\"hero\"]:not([data-mirafive-variant=\"b\"]){display:none!important}",
+            "script": "(function(k,s,W,V,H,N,R,U,X){var w=window,d=document,n=navigator,l=location,c=w.__mirafive_consent,i,v,j,b,q=l.search.match(\"[?&]mirafive-preview=\"+k+\":([a-z0-9-]+)\");function S(x){d.documentElement.setAttribute(\"data-mirafive-\"+k,x)}function A(m){var t=Date.now(),x,p,e,y;try{x=localStorage.getItem(m)}catch(_){}if(x==null)return;y=x.indexOf(\".\");e=y<0?t:Number(x.slice(y+1));p=y<0?x:x.slice(0,y);if(p!==\"\"&&isFinite(e)&&t-e<31536e6)return p}function F(t){for(var h=2166136261,z=0,u=unescape(encodeURIComponent(t));z<u.length;z++)h=Math.imul(h^u.charCodeAt(z),16777619)>>>0;return h}function G(){var r=w.crypto,a,t=\"\",z;if(r.randomUUID)return r.randomUUID();a=r.getRandomValues(new Uint8Array(16));a[6]=a[6]&15|64;a[8]=a[8]&63|128;for(z=0;z<16;z++)t+=(z==4||z==6||z==8||z==10?\"-\":\"\")+(a[z]+256).toString(16).slice(1);return t}if(q&&V.indexOf(q[1])>=0)return S(q[1]);if(H.indexOf(l.hostname)<0||Date.now()>U||n.doNotTrack==\"1\"||n.globalPrivacyControl||w.__mirafive_ignore||d.prerendering)return S(V[0]);if(c&&c.experiments===true)i=A(\"mirafive:\"+N+\":aid\");if(!i&&R&&(c===void 0||c&&c.experiments===true))i=w.__mirafive_aid_next=w.__mirafive_aid_next||G();if(i)for(b=F(\"\"+F(s+\".v\"+i))%1e4,j=0;j<V.length&&!v;j++)if((b-=W[j])<0)v=V[j];S(v=v||V[0]);if(i)(w.__mirafive_experiments=w.__mirafive_experiments||[]).push({k:k,v:v,s:s,w:W,m:R?\"r\":\"o\",h:X,b:c===void 0?0:1})})(\"hero\",\"k3j9x0a1b2c3\",[5000,5000],[\"a\",\"b\"],[\"example.com\",\"www.example.com\"],\"mf_7kq2ab3x\",0,1805552000000,\"8624a0de\")"
+        },
+        "legacy": {
+            "key": "pricing-page",
+            "ingestKey": "mira_ik_0123456789abcdef_Ab_cD9-xY",
+            "origins": [
+                "https://www.shop.example"
+            ],
+            "hosts": [
+                "www.shop.example",
+                "shop.example"
+            ],
+            "namespace": "mira_ik_0123456789abcdef_Ab",
+            "hash": "028bb583",
+            "style": "html:not([data-mirafive-pricing-page=\"b\"]) [data-mirafive-experiment=\"pricing-page\"]:not([data-mirafive-variant=\"a\"]),html[data-mirafive-pricing-page=\"b\"] [data-mirafive-experiment=\"pricing-page\"]:not([data-mirafive-variant=\"b\"]){display:none!important}",
+            "script": "(function(k,s,W,V,H,N,R,U,X){var w=window,d=document,n=navigator,l=location,c=w.__mirafive_consent,i,v,j,b,q=l.search.match(\"[?&]mirafive-preview=\"+k+\":([a-z0-9-]+)\");function S(x){d.documentElement.setAttribute(\"data-mirafive-\"+k,x)}function A(m){var t=Date.now(),x,p,e,y;try{x=localStorage.getItem(m)}catch(_){}if(x==null)return;y=x.indexOf(\".\");e=y<0?t:Number(x.slice(y+1));p=y<0?x:x.slice(0,y);if(p!==\"\"&&isFinite(e)&&t-e<31536e6)return p}function F(t){for(var h=2166136261,z=0,u=unescape(encodeURIComponent(t));z<u.length;z++)h=Math.imul(h^u.charCodeAt(z),16777619)>>>0;return h}function G(){var r=w.crypto,a,t=\"\",z;if(r.randomUUID)return r.randomUUID();a=r.getRandomValues(new Uint8Array(16));a[6]=a[6]&15|64;a[8]=a[8]&63|128;for(z=0;z<16;z++)t+=(z==4||z==6||z==8||z==10?\"-\":\"\")+(a[z]+256).toString(16).slice(1);return t}if(q&&V.indexOf(q[1])>=0)return S(q[1]);if(H.indexOf(l.hostname)<0||Date.now()>U||n.doNotTrack==\"1\"||n.globalPrivacyControl||w.__mirafive_ignore||d.prerendering)return S(V[0]);if(c&&c.experiments===true)i=A(\"mirafive:\"+N+\":aid\");if(!i&&R&&(c===void 0||c&&c.experiments===true))i=w.__mirafive_aid_next=w.__mirafive_aid_next||G();if(i)for(b=F(\"\"+F(s+\".v\"+i))%1e4,j=0;j<V.length&&!v;j++)if((b-=W[j])<0)v=V[j];S(v=v||V[0]);if(i)(w.__mirafive_experiments=w.__mirafive_experiments||[]).push({k:k,v:v,s:s,w:W,m:R?\"r\":\"o\",h:X,b:c===void 0?0:1})})(\"pricing-page\",\"p9x2m4k7q1z0\",[5000,5000],[\"a\",\"b\"],[\"www.shop.example\",\"shop.example\"],\"mira_ik_0123456789abcdef_Ab\",0,1805552000000,\"028bb583\")"
+        }
+    },
+    "cases": [
+        {
+            "name": "random mode, no signal yet: a pending id is drawn in memory",
+            "snippet": "random",
+            "url": "https://example.com/pricing",
+            "storage": {
+                "mirafive:mf_7kq2ab3x:aid": "0199a3f2-7c1e-7a4b-9f00-1b2c3d4e5f60.1789913600000"
+            },
+            "uuid": "0199a3f2-7c1e-7a4b-9f00-000000000001",
+            "now": 1790000000000,
+            "expect": {
+                "attribute": "a",
+                "entry": {
+                    "k": "hero",
+                    "v": "a",
+                    "s": "k3j9x0a1b2c3",
+                    "w": [
+                        5000,
+                        5000
+                    ],
+                    "m": "r",
+                    "h": "fa1adf55",
+                    "b": 0
+                },
+                "pending": "0199a3f2-7c1e-7a4b-9f00-000000000001",
+                "storageReads": 0
+            }
+        },
+        {
+            "name": "random mode reuses the pending id already drawn",
+            "snippet": "random",
+            "url": "https://www.example.com/pricing",
+            "pending": "0199a3f2-7c1e-7a4b-9f00-000000000003",
+            "uuid": "0199a3f2-7c1e-7a4b-9f00-000000000001",
+            "now": 1790000000000,
+            "expect": {
+                "attribute": "b",
+                "entry": {
+                    "k": "hero",
+                    "v": "b",
+                    "s": "k3j9x0a1b2c3",
+                    "w": [
+                        5000,
+                        5000
+                    ],
+                    "m": "r",
+                    "h": "fa1adf55",
+                    "b": 0
+                },
+                "pending": "0199a3f2-7c1e-7a4b-9f00-000000000003",
+                "storageReads": 0
+            }
+        },
+        {
+            "name": "without crypto.randomUUID the pending id comes from getRandomValues",
+            "snippet": "random",
+            "url": "https://example.com/",
+            "bytes": [
+                31,
+                139,
+                8,
+                0,
+                222,
+                173,
+                190,
+                239,
+                202,
+                254,
+                186,
+                190,
+                0,
+                17,
+                34,
+                51
+            ],
+            "now": 1790000000000,
+            "expect": {
+                "attribute": "b",
+                "entry": {
+                    "k": "hero",
+                    "v": "b",
+                    "s": "k3j9x0a1b2c3",
+                    "w": [
+                        5000,
+                        5000
+                    ],
+                    "m": "r",
+                    "h": "fa1adf55",
+                    "b": 0
+                },
+                "pending": "1f8b0800-dead-4eef-8afe-babe00112233",
+                "storageReads": 0
+            }
+        },
+        {
+            "name": "original mode, no signal yet: the original, nothing read or drawn",
+            "snippet": "original",
+            "url": "https://example.com/pricing",
+            "storage": {
+                "mirafive:mf_7kq2ab3x:aid": "0199a3f2-7c1e-7a4b-9f00-1b2c3d4e5f60.1789913600000"
+            },
+            "uuid": "0199a3f2-7c1e-7a4b-9f00-000000000001",
+            "now": 1790000000000,
+            "expect": {
+                "attribute": "a",
+                "entry": null,
+                "pending": null,
+                "storageReads": 0
+            }
+        },
+        {
+            "name": "signal with experiments: the stored id before its last-seen suffix",
+            "snippet": "original",
+            "url": "https://example.com/pricing",
+            "signal": {
+                "statistics": true,
+                "experiments": true,
+                "targeting": false
+            },
+            "storage": {
+                "mirafive:mf_7kq2ab3x:aid": "0199a3f2-7c1e-7a4b-9f00-000000000001.1789913600000"
+            },
+            "now": 1790000000000,
+            "expect": {
+                "attribute": "a",
+                "entry": {
+                    "k": "hero",
+                    "v": "a",
+                    "s": "k3j9x0a1b2c3",
+                    "w": [
+                        5000,
+                        5000
+                    ],
+                    "m": "o",
+                    "h": "8624a0de",
+                    "b": 1
+                },
+                "pending": null,
+                "storageReads": 1
+            }
+        },
+        {
+            "name": "signal with experiments: the www twin of an allowed origin draws",
+            "snippet": "original",
+            "url": "https://www.example.com/pricing",
+            "signal": {
+                "statistics": true,
+                "experiments": true,
+                "targeting": false
+            },
+            "storage": {
+                "mirafive:mf_7kq2ab3x:aid": "0199a3f2-7c1e-7a4b-9f00-000000000005.1789740800000"
+            },
+            "now": 1790000000000,
+            "expect": {
+                "attribute": "b",
+                "entry": {
+                    "k": "hero",
+                    "v": "b",
+                    "s": "k3j9x0a1b2c3",
+                    "w": [
+                        5000,
+                        5000
+                    ],
+                    "m": "o",
+                    "h": "8624a0de",
+                    "b": 1
+                },
+                "pending": null,
+                "storageReads": 1
+            }
+        },
+        {
+            "name": "the bare legacy form is a stored id",
+            "snippet": "original",
+            "url": "https://example.com/pricing",
+            "signal": {
+                "statistics": true,
+                "experiments": true,
+                "targeting": false
+            },
+            "storage": {
+                "mirafive:mf_7kq2ab3x:aid": "0199a3f2-7c1e-7a4b-9f00-000000000002"
+            },
+            "now": 1790000000000,
+            "expect": {
+                "attribute": "a",
+                "entry": {
+                    "k": "hero",
+                    "v": "a",
+                    "s": "k3j9x0a1b2c3",
+                    "w": [
+                        5000,
+                        5000
+                    ],
+                    "m": "o",
+                    "h": "8624a0de",
+                    "b": 1
+                },
+                "pending": null,
+                "storageReads": 1
+            }
+        },
+        {
+            "name": "an id unused for twelve months has expired",
+            "snippet": "original",
+            "url": "https://example.com/pricing",
+            "signal": {
+                "statistics": true,
+                "experiments": true,
+                "targeting": false
+            },
+            "storage": {
+                "mirafive:mf_7kq2ab3x:aid": "0199a3f2-7c1e-7a4b-9f00-000000000004.1758464000000"
+            },
+            "now": 1790000000000,
+            "expect": {
+                "attribute": "a",
+                "entry": null,
+                "pending": null,
+                "storageReads": 1
+            }
+        },
+        {
+            "name": "an id seen just inside twelve months is kept",
+            "snippet": "original",
+            "url": "https://example.com/pricing",
+            "signal": {
+                "statistics": true,
+                "experiments": true,
+                "targeting": false
+            },
+            "storage": {
+                "mirafive:mf_7kq2ab3x:aid": "6f1c2d3e-4a5b-4c6d-8e7f-9a0b1c2d3e4f.1758464000001"
+            },
+            "now": 1790000000000,
+            "expect": {
+                "attribute": "b",
+                "entry": {
+                    "k": "hero",
+                    "v": "b",
+                    "s": "k3j9x0a1b2c3",
+                    "w": [
+                        5000,
+                        5000
+                    ],
+                    "m": "o",
+                    "h": "8624a0de",
+                    "b": 1
+                },
+                "pending": null,
+                "storageReads": 1
+            }
+        },
+        {
+            "name": "a last-seen suffix that is not a number is no id",
+            "snippet": "original",
+            "url": "https://example.com/pricing",
+            "signal": {
+                "statistics": true,
+                "experiments": true,
+                "targeting": false
+            },
+            "storage": {
+                "mirafive:mf_7kq2ab3x:aid": "0199a3f2-7c1e-7a4b-9f00-000000000004.abc"
+            },
+            "now": 1790000000000,
+            "expect": {
+                "attribute": "a",
+                "entry": null,
+                "pending": null,
+                "storageReads": 1
+            }
+        },
+        {
+            "name": "an empty id before the suffix is no id",
+            "snippet": "original",
+            "url": "https://example.com/pricing",
+            "signal": {
+                "statistics": true,
+                "experiments": true,
+                "targeting": false
+            },
+            "storage": {
+                "mirafive:mf_7kq2ab3x:aid": ".1789913600000"
+            },
+            "now": 1790000000000,
+            "expect": {
+                "attribute": "a",
+                "entry": null,
+                "pending": null,
+                "storageReads": 1
+            }
+        },
+        {
+            "name": "random mode with an expired id draws a pending id",
+            "snippet": "random",
+            "url": "https://example.com/pricing",
+            "signal": {
+                "statistics": true,
+                "experiments": true,
+                "targeting": false
+            },
+            "storage": {
+                "mirafive:mf_7kq2ab3x:aid": "0199a3f2-7c1e-7a4b-9f00-000000000004.1726928000000"
+            },
+            "uuid": "6f1c2d3e-4a5b-4c6d-8e7f-9a0b1c2d3e4f",
+            "now": 1790000000000,
+            "expect": {
+                "attribute": "b",
+                "entry": {
+                    "k": "hero",
+                    "v": "b",
+                    "s": "k3j9x0a1b2c3",
+                    "w": [
+                        5000,
+                        5000
+                    ],
+                    "m": "r",
+                    "h": "fa1adf55",
+                    "b": 1
+                },
+                "pending": "6f1c2d3e-4a5b-4c6d-8e7f-9a0b1c2d3e4f",
+                "storageReads": 1
+            }
+        },
+        {
+            "name": "granted but nothing stored: original mode waits for the next page",
+            "snippet": "original",
+            "url": "https://example.com/pricing",
+            "signal": {
+                "statistics": true,
+                "experiments": true,
+                "targeting": false
+            },
+            "uuid": "0199a3f2-7c1e-7a4b-9f00-000000000001",
+            "now": 1790000000000,
+            "expect": {
+                "attribute": "a",
+                "entry": null,
+                "pending": null,
+                "storageReads": 1
+            }
+        },
+        {
+            "name": "a legacy key namespaces storage like the tracker, before its last underscore",
+            "snippet": "legacy",
+            "url": "https://shop.example/preise",
+            "signal": {
+                "statistics": true,
+                "experiments": true,
+                "targeting": false
+            },
+            "storage": {
+                "mirafive:mira_ik_0123456789abcdef_Ab:aid": "0199a3f2-7c1e-7a4b-9f00-000000000004.1789913600000",
+                "mirafive:mira_ik_0123456789abcdef:aid": "0199a3f2-7c1e-7a4b-9f00-1b2c3d4e5f60.1789913600000"
+            },
+            "now": 1790000000000,
+            "expect": {
+                "attribute": "a",
+                "entry": {
+                    "k": "pricing-page",
+                    "v": "a",
+                    "s": "p9x2m4k7q1z0",
+                    "w": [
+                        5000,
+                        5000
+                    ],
+                    "m": "o",
+                    "h": "028bb583",
+                    "b": 1
+                },
+                "pending": null,
+                "storageReads": 1
+            }
+        },
+        {
+            "name": "signal false: the original, nothing read or drawn",
+            "snippet": "random",
+            "url": "https://example.com/pricing",
+            "signal": false,
+            "uuid": "0199a3f2-7c1e-7a4b-9f00-000000000001",
+            "now": 1790000000000,
+            "expect": {
+                "attribute": "a",
+                "entry": null,
+                "pending": null,
+                "storageReads": 0
+            }
+        },
+        {
+            "name": "experiments false: the original, nothing read or drawn",
+            "snippet": "random",
+            "url": "https://example.com/pricing",
+            "signal": {
+                "statistics": true,
+                "experiments": false,
+                "targeting": false
+            },
+            "uuid": "0199a3f2-7c1e-7a4b-9f00-000000000001",
+            "now": 1790000000000,
+            "expect": {
+                "attribute": "a",
+                "entry": null,
+                "pending": null,
+                "storageReads": 0
+            }
+        },
+        {
+            "name": "a signal without experiments means statistics only: the original",
+            "snippet": "random",
+            "url": "https://example.com/pricing",
+            "signal": {
+                "statistics": true
+            },
+            "uuid": "0199a3f2-7c1e-7a4b-9f00-000000000001",
+            "now": 1790000000000,
+            "expect": {
+                "attribute": "a",
+                "entry": null,
+                "pending": null,
+                "storageReads": 0
+            }
+        },
+        {
+            "name": "Do Not Track: the original, and storage is never read",
+            "snippet": "random",
+            "url": "https://example.com/pricing",
+            "signal": {
+                "statistics": true,
+                "experiments": true,
+                "targeting": false
+            },
+            "storage": {
+                "mirafive:mf_7kq2ab3x:aid": "0199a3f2-7c1e-7a4b-9f00-000000000004.1789913600000"
+            },
+            "uuid": "0199a3f2-7c1e-7a4b-9f00-000000000001",
+            "dnt": "1",
+            "now": 1790000000000,
+            "expect": {
+                "attribute": "a",
+                "entry": null,
+                "pending": null,
+                "storageReads": 0
+            }
+        },
+        {
+            "name": "Global Privacy Control: the original, and storage is never read",
+            "snippet": "random",
+            "url": "https://example.com/pricing",
+            "signal": {
+                "statistics": true,
+                "experiments": true,
+                "targeting": false
+            },
+            "storage": {
+                "mirafive:mf_7kq2ab3x:aid": "0199a3f2-7c1e-7a4b-9f00-000000000004.1789913600000"
+            },
+            "uuid": "0199a3f2-7c1e-7a4b-9f00-000000000001",
+            "gpc": true,
+            "now": 1790000000000,
+            "expect": {
+                "attribute": "a",
+                "entry": null,
+                "pending": null,
+                "storageReads": 0
+            }
+        },
+        {
+            "name": "a page that ignores MIRA FIVE: the original, and storage is never read",
+            "snippet": "random",
+            "url": "https://example.com/pricing",
+            "signal": {
+                "statistics": true,
+                "experiments": true,
+                "targeting": false
+            },
+            "storage": {
+                "mirafive:mf_7kq2ab3x:aid": "0199a3f2-7c1e-7a4b-9f00-000000000004.1789913600000"
+            },
+            "uuid": "0199a3f2-7c1e-7a4b-9f00-000000000001",
+            "ignore": true,
+            "now": 1790000000000,
+            "expect": {
+                "attribute": "a",
+                "entry": null,
+                "pending": null,
+                "storageReads": 0
+            }
+        },
+        {
+            "name": "prerendering: the original, and storage is never read",
+            "snippet": "random",
+            "url": "https://example.com/pricing",
+            "signal": {
+                "statistics": true,
+                "experiments": true,
+                "targeting": false
+            },
+            "storage": {
+                "mirafive:mf_7kq2ab3x:aid": "0199a3f2-7c1e-7a4b-9f00-000000000004.1789913600000"
+            },
+            "uuid": "0199a3f2-7c1e-7a4b-9f00-000000000001",
+            "prerendering": true,
+            "now": 1790000000000,
+            "expect": {
+                "attribute": "a",
+                "entry": null,
+                "pending": null,
+                "storageReads": 0
+            }
+        },
+        {
+            "name": "after until: the original, and storage is never read",
+            "snippet": "random",
+            "url": "https://example.com/pricing",
+            "signal": {
+                "statistics": true,
+                "experiments": true,
+                "targeting": false
+            },
+            "storage": {
+                "mirafive:mf_7kq2ab3x:aid": "0199a3f2-7c1e-7a4b-9f00-000000000004.1789913600000"
+            },
+            "uuid": "0199a3f2-7c1e-7a4b-9f00-000000000001",
+            "now": 1805552000001,
+            "expect": {
+                "attribute": "a",
+                "entry": null,
+                "pending": null,
+                "storageReads": 0
+            }
+        },
+        {
+            "name": "a host outside the allowed origins: the original",
+            "snippet": "random",
+            "url": "https://staging.example.net/pricing",
+            "uuid": "0199a3f2-7c1e-7a4b-9f00-000000000001",
+            "now": 1790000000000,
+            "expect": {
+                "attribute": "a",
+                "entry": null,
+                "pending": null,
+                "storageReads": 0
+            }
+        },
+        {
+            "name": "a preview link works on localhost and is never counted",
+            "snippet": "random",
+            "url": "http://localhost:3000/pricing?utm_source=x&mirafive-preview=hero:b",
+            "uuid": "0199a3f2-7c1e-7a4b-9f00-000000000001",
+            "now": 1790000000000,
+            "expect": {
+                "attribute": "b",
+                "entry": null,
+                "pending": null,
+                "storageReads": 0
+            }
+        },
+        {
+            "name": "a preview link shows the original too",
+            "snippet": "random",
+            "url": "https://example.com/pricing?mirafive-preview=hero:a",
+            "signal": {
+                "statistics": true,
+                "experiments": true,
+                "targeting": false
+            },
+            "storage": {
+                "mirafive:mf_7kq2ab3x:aid": "0199a3f2-7c1e-7a4b-9f00-000000000005.1789913600000"
+            },
+            "now": 1790000000000,
+            "expect": {
+                "attribute": "a",
+                "entry": null,
+                "pending": null,
+                "storageReads": 0
+            }
+        },
+        {
+            "name": "a preview of a variant it does not have is ignored",
+            "snippet": "original",
+            "url": "https://example.com/pricing?mirafive-preview=hero:z",
+            "signal": {
+                "statistics": true,
+                "experiments": true,
+                "targeting": false
+            },
+            "storage": {
+                "mirafive:mf_7kq2ab3x:aid": "0199a3f2-7c1e-7a4b-9f00-000000000005.1789913600000"
+            },
+            "now": 1790000000000,
+            "expect": {
+                "attribute": "b",
+                "entry": {
+                    "k": "hero",
+                    "v": "b",
+                    "s": "k3j9x0a1b2c3",
+                    "w": [
+                        5000,
+                        5000
+                    ],
+                    "m": "o",
+                    "h": "8624a0de",
+                    "b": 1
+                },
+                "pending": null,
+                "storageReads": 1
+            }
+        }
+    ]
+}
