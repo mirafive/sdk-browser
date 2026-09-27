@@ -71,7 +71,7 @@ describe("consentless mode", () => {
 
     for (const batch of batches()) {
       expect(batch.mode).toBe("consentless")
-      expect(batch.context).toEqual({ sdk: "mirafive-browser/0.5.0" })
+      expect(batch.context).toEqual({ sdk: "mirafive-browser/1.0.0" })
 
       for (const event of batch.events) {
         expect(

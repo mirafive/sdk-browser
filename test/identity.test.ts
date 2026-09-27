@@ -51,7 +51,7 @@ describe("consent(true)", () => {
 
     expect(batch?.mode).toBe("full")
     expect(batch?.context).toEqual({
-      sdk: "mirafive-browser/0.5.0",
+      sdk: "mirafive-browser/1.0.0",
       locale: navigator.language,
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       screen: [screen.width, screen.height]

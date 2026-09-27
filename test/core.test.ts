@@ -49,7 +49,7 @@ describe("transport", () => {
         batch: expect.stringMatching(/^[0-9a-f-]{36}$/),
         mode: "consentless",
         sentAt: 1_727_430_000_000,
-        context: { sdk: "mirafive-browser/0.5.0" },
+        context: { sdk: "mirafive-browser/1.0.0" },
         events: [
           {
             name: "signup",
@@ -601,7 +601,7 @@ describe("plugins", () => {
       name: "probe",
       setup(core) {
         expect(core.options).toMatchObject({ key: KEY, host: HOST, mode: "consentless" })
-        expect(core.state).toMatchObject({ mode: "consentless", context: { sdk: "mirafive-browser/0.5.0" } })
+        expect(core.state).toMatchObject({ mode: "consentless", context: { sdk: "mirafive-browser/1.0.0" } })
         expect(core.clean("https://a.example/?utm_medium=x&q=1#h")).toBe("https://a.example/?utm_medium=x")
         expect(core.uuid()).toMatch(/^[0-9a-f-]{36}$/)
         expect(core.optedOut()).toBe(false)
@@ -651,14 +651,14 @@ describe("plugins", () => {
   it("lets the hosted tracker name itself in context.sdk", async () => {
     const client = await mira({
       plugins: [
-        { name: "tracker", setup: (core) => void (core.state.context.sdk = "mirafive-tracker/0.5.0") }
+        { name: "tracker", setup: (core) => void (core.state.context.sdk = "mirafive-tracker/1.0.0") }
       ]
     })
 
     client.track("a")
     await client.flush()
 
-    expect(batches()[0]?.context).toEqual({ sdk: "mirafive-tracker/0.5.0" })
+    expect(batches()[0]?.context).toEqual({ sdk: "mirafive-tracker/1.0.0" })
   })
 
   it("types the client", async () => {

@@ -4,7 +4,7 @@
   "mode": "full",
   "sentAt": 1727430060000,
   "context": {
-    "sdk": "mirafive-browser/0.5.0",
+    "sdk": "mirafive-browser/1.0.0",
     "locale": "de-DE",
     "timezone": "Europe/Berlin",
     "screen": [
