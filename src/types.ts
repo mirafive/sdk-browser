@@ -92,7 +92,7 @@ export interface FlagState {
 export interface MiraState {
   /** The mode batches are sent in now. identity switches it to `"full"` while statistics consent holds. */
   mode: Mode
-  /** Sent with every batch. `sdk` is set by the core; a framework may append ` react` and the like. */
+  /** Sent with every batch. `sdk` is set by the core; framework packages leave it unchanged. */
   context: {
     sdk?: string | undefined
     locale?: string | undefined

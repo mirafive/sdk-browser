@@ -257,7 +257,7 @@ export const outboundLinks = (): Plugin => ({
 | `state` | Owner | |
 |---|---|---|
 | `mode` | identity | the mode batches are sent in: `"full"` only while statistics consent holds |
-| `context` | core | sent with every batch; append a framework token with `state.context.sdk += " react"` |
+| `context` | core | sent with every batch; framework packages leave `sdk` unchanged (the hosted tracker sets its own name) |
 | `hash` | pageviews | hash routing |
 | `page` | core | the last pageview's page, sent or not |
 | `consent`, `boot`, `user`, `aid()` | identity | the answer, `$boot`, the user, the anonymous id (minted on first use, only with a consent scope) |
