@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.0 — unreleased
+## 1.0.0 — 2026-09-27
 
 First release on the v1 ingest protocol, rebuilt from scratch around plugins.
 
