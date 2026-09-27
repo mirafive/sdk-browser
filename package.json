@@ -1,7 +1,7 @@
 {
   "name": "@mirafive/sdk-browser",
   "version": "1.0.0",
-  "description": "The MIRA FIVE browser SDK: privacy-first analytics and feature flags, one small import per feature.",
+  "description": "MIRA FIVE browser SDK",
   "keywords": [
     "ab-testing",
     "analytics",
