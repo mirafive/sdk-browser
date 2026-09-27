@@ -44,6 +44,28 @@ const uuid = (): string =>
     (+digit ^ ((crypto.getRandomValues(new Uint8Array(1))[0] ?? 0) & (15 >> (+digit / 4)))).toString(16)
   )
 
+/** Cuts text without splitting a surrogate pair, which would make the whole batch invalid JSON. */
+const cut = (text: string | null | undefined, max: number): string | undefined =>
+  text?.slice(0, max).replace(/[\ud800-\udbff]$/, "") || undefined
+
+// Mirrors the server's rule (app/Rules/EventProperties.php): lists and empty objects are one leaf.
+const leaves = (value: object, depth: number): number => {
+  let count = 0
+
+  for (const [key, item] of Object.entries(value)) {
+    count +=
+      key.length > 128
+        ? 99
+        : item && typeof item === "object" && Object.keys(item).some((name, index) => name !== String(index))
+          ? depth > 4
+            ? 99
+            : leaves(item, depth + 1)
+          : 1
+  }
+
+  return count
+}
+
 const check = (ok: unknown, message: string): void => {
   if (!ok) {
     throw new TypeError("[mirafive] " + message)
@@ -56,14 +78,19 @@ export const createMira = <Events extends EventMap = EventMap>(options: MiraOpti
   const n = navigator as Navigator & { globalPrivacyControl?: boolean }
   const l = location
   const local = l.protocol === "file:" || /^(localhost|\[::1\]|127\..*|.*\.local)$/.test(l.hostname)
-  const { key, mode = "consentless", plugins = [], flushAt = 20, flushAfterMs = 5000 } = options
+  const { key, mode = "consentless", plugins = [] } = options
   const host = (options.host ?? DEFAULT_HOST).replace(/\/+$/, "")
+  const endpoint = `${host}/v1/batch/${key}`
   const hooks: Record<string, Set<Listener>> = {}
   const teardowns: (() => void)[] = []
   const state: MiraState = { mode: "consentless", context: { sdk: "mirafive-browser/" + VERSION } }
+  // Bodies sent but not yet answered: sent again by beacon on page hide, cancelled by clear().
+  const flying = new Set<string>()
   let queue: MiraEvent[] = []
+  let held: MiraEvent[] | undefined
   let bytes = 0
   let timer: ReturnType<typeof setTimeout> | undefined
+  let flushing = false
   let inert = !!w.__mirafive_boot
 
   check(!("secretKey" in options), "secret keys are server-only")
@@ -81,6 +108,15 @@ export const createMira = <Events extends EventMap = EventMap>(options: MiraOpti
     }
   }
 
+  const range = (name: "flushAt" | "flushAfterMs", fallback: number, min: number, max: number): number => {
+    const value = options[name] ?? fallback
+
+    return value >= min && value <= max ? value : (warn(`${name}: ${min}–${max}`), value > max ? max : min)
+  }
+
+  const flushAt = range("flushAt", 20, 1, 1000)
+  const flushAfterMs = range("flushAfterMs", 5000, 50, 3e5)
+
   const emit = (hook: string, argument?: unknown): boolean => {
     let kept = true
 
@@ -97,16 +133,18 @@ export const createMira = <Events extends EventMap = EventMap>(options: MiraOpti
   const clean = (url: string): string => cleanUrl(url, state.hash)
 
   // Retries resend the identical body: the batch id in it makes the server store it once.
-  const post = async (url: string, body: string, keepalive: boolean, attempt = 0): Promise<void> => {
+  const post = async (body: string, keepalive: boolean, attempt = 0): Promise<void> => {
     let response: Response | undefined
 
     try {
-      response = await fetch(url, { method: "POST", body, credentials: "omit", keepalive })
+      response = await fetch(endpoint, { method: "POST", body, credentials: "omit", keepalive })
 
       const { status } = response
 
       if (status !== 408 && status !== 429 && status < 500) {
         const answer: { reason?: string; code?: string } = await response.json().catch(() => ({}))
+
+        flying.delete(body)
 
         return void (
           (answer.reason || !response.ok) &&
@@ -118,6 +156,7 @@ export const createMira = <Events extends EventMap = EventMap>(options: MiraOpti
     }
 
     if (attempt > 1) {
+      flying.delete(body)
       return warn("batch dropped")
     }
 
@@ -131,17 +170,25 @@ export const createMira = <Events extends EventMap = EventMap>(options: MiraOpti
       )
     )
 
-    return post(url, body, keepalive, attempt + 1)
+    // Not when clear() cancelled it while it waited.
+    return flying.has(body) ? post(body, keepalive, attempt + 1) : undefined
   }
 
   const flush = async (unload?: boolean): Promise<void> => {
-    emit("flush")
+    let body: string | undefined
+
+    // A flush listener may queue events, and queueing may flush: only the outer call asks.
+    if (!flushing) {
+      flushing = true
+      emit("flush")
+      flushing = false
+    }
+
     clearTimeout(timer)
     timer = undefined
 
     if (queue.length) {
-      const url = `${host}/v1/batch/${key}`
-      const body = JSON.stringify({
+      body = JSON.stringify({
         v: 1,
         batch: uuid(),
         mode: state.mode,
@@ -149,13 +196,57 @@ export const createMira = <Events extends EventMap = EventMap>(options: MiraOpti
         context: state.context,
         events: queue
       })
-
       queue = []
       bytes = 0
+      flying.add(body)
+    }
 
-      if (!(unload && n.sendBeacon?.(url, body))) {
-        await post(url, body, !!unload)
+    // The batch id makes a body sent twice count once.
+    for (const sent of unload ? flying : []) {
+      if (n.sendBeacon?.(endpoint, sent)) {
+        flying.delete(sent)
       }
+    }
+
+    if (body && flying.has(body)) {
+      await post(body, !!unload)
+    }
+  }
+
+  const clear = (): void => {
+    queue = []
+    held = undefined
+    bytes = 0
+    flying.clear()
+  }
+
+  const enqueue = (event: MiraEvent): void => {
+    if ((mode === "full" && state.mode !== "full") || !emit("beforeSend", event)) {
+      return
+    }
+
+    const json = JSON.stringify(event)
+    const properties = JSON.stringify(event.properties ?? {})
+    const parsed: object = JSON.parse(properties)
+    const size = new Blob([json]).size
+
+    // One event the server refuses would refuse the whole batch (PROTOCOL §3); a lone surrogate is escaped as \udxxx.
+    if (/\\ud[89a-f]/.test(json) || new Blob([properties]).size > 32768 || leaves(parsed, 1) > 64) {
+      return warn("event dropped: " + event.name)
+    }
+
+    // Keeps every batch, the one sent on page hide included, under ~48 KB.
+    if (bytes + size > 48e3) {
+      void flush()
+    }
+
+    queue.push(event)
+    bytes += size
+
+    if (queue.length >= flushAt) {
+      void flush()
+    } else {
+      timer ??= setTimeout(() => void flush(), flushAfterMs)
     }
   }
 
@@ -165,7 +256,7 @@ export const createMira = <Events extends EventMap = EventMap>(options: MiraOpti
       return d.addEventListener("prerenderingchange", () => send(name, properties, page), { once: true })
     }
 
-    if (inert || optedOut() || (mode === "full" && state.mode !== "full")) {
+    if (inert || optedOut()) {
       return
     }
 
@@ -173,25 +264,22 @@ export const createMira = <Events extends EventMap = EventMap>(options: MiraOpti
       return warn("local host: set trackLocalhost")
     }
 
-    const event: MiraEvent = { name, time: Date.now(), page, properties }
-
-    if (emit("beforeSend", event)) {
-      const size = new Blob([JSON.stringify(event)]).size
-
-      // Keeps every batch, the one sent on page hide included, under ~48 KB.
-      if (bytes + size > 48e3) {
-        void flush()
-      }
-
-      queue.push(event)
-      bytes += size
-
-      if (queue.length >= flushAt) {
-        void flush()
-      } else {
-        timer ??= setTimeout(() => void flush(), flushAfterMs)
-      }
+    const event: MiraEvent = {
+      name,
+      time: Date.now(),
+      page: page && {
+        url: cut(page.url, 2048),
+        title: cut(page.title, 512),
+        referrer: cut(page.referrer, 2048)
+      },
+      properties
     }
+
+    if (held && state.mode !== "full") {
+      return void (held.length < 100 && held.push(event))
+    }
+
+    enqueue(event)
   }
 
   const onHide = (event: Event): void => {
@@ -210,15 +298,16 @@ export const createMira = <Events extends EventMap = EventMap>(options: MiraOpti
 
   const client: Record<string, (...args: never[]) => unknown> = {
     track: (name: string, properties?: Properties) =>
-      /^[^$\s](.{0,126}\S)?$/s.test(name)
+      typeof name === "string" && /^[^$\s](.{0,126}\S)?$/s.test(name)
         ? send(name, properties, { url: clean(l.href) })
         : warn("bad name: " + name),
-    pageview: (given: Page = {}) => {
-      const href = given.url ?? l.href
+    pageview: (given?: Page | null) => {
+      const href = given?.url ?? l.href
+      // send() cuts the fields.
       const page = {
-        url: clean(href).slice(0, 2048),
-        title: (given.title ?? d.title).slice(0, 512) || undefined,
-        referrer: (given.referrer ?? state.page?.url ?? d.referrer).slice(0, 2048) || undefined
+        url: clean(href),
+        title: given?.title ?? d.title,
+        referrer: given?.referrer ?? state.page?.url ?? d.referrer
       }
 
       state.page = page
@@ -232,7 +321,7 @@ export const createMira = <Events extends EventMap = EventMap>(options: MiraOpti
         inert = true
         w.__mirafive_boot = undefined
         clearTimeout(timer)
-        queue = []
+        clear()
         d.removeEventListener("visibilitychange", onHide)
         w.removeEventListener("pagehide", onHide)
         teardowns.forEach((teardown) => teardown())
@@ -268,11 +357,19 @@ export const createMira = <Events extends EventMap = EventMap>(options: MiraOpti
     emit,
     ready: (run) => queueMicrotask(run),
     flush,
-    clear: () => {
-      queue = []
-      bytes = 0
+    clear,
+    hold: () => void (held ??= []),
+    release: (keep) => {
+      const events = held ?? []
+
+      held = undefined
+
+      if (keep) {
+        events.forEach(enqueue)
+      }
     },
     clean,
+    cut,
     uuid,
     warn,
     optedOut

@@ -15,21 +15,28 @@ export const pageviews = ({ hash = false, initial = true }: PageviewsOptions = {
     const h = history
     const l = location
     const undo: (() => void)[] = []
-    const route = (): string => l.pathname + l.search + (hash ? l.hash : "")
     let last: string | undefined
+    let raw: string | undefined
+
+    const current = (): string => (hash ? l.href : (l.href.split("#")[0] ?? ""))
 
     const view = (later?: unknown): void => {
-      const now = route()
-      const url = l.href
+      const url = current()
+      const route = core.clean(url)
 
-      if (now !== last) {
-        last = now
+      if (route !== last) {
+        last = route
+        raw = url
         // A router sets the title after it changes the URL, so the title is read one macrotask later.
         if (later) {
           setTimeout(() => core.client.pageview({ url }))
         } else {
           core.client.pageview()
         }
+      } else if (url !== raw) {
+        // The same page for analytics, but siteSearch() still reads the term from the new URL.
+        raw = url
+        core.emit("pageview", url)
       }
     }
 
@@ -70,7 +77,8 @@ export const pageviews = ({ hash = false, initial = true }: PageviewsOptions = {
       // A microtask later, so a consent answer given right after createMira() applies to the landing page.
       core.ready(view)
     } else {
-      last = route()
+      raw = current()
+      last = core.clean(raw)
     }
 
     return () => undo.forEach((run) => run())

@@ -433,3 +433,48 @@ describe("misuse", () => {
     expect(warnings()).toContain('[mirafive] identity() needs mode "full"')
   })
 })
+
+describe("review fixes", () => {
+  it("does not restore ids another tab removed", async () => {
+    const client = await full()
+
+    client.consent(true)
+    client.track("a")
+    localStorage.clear()
+    client.track("b")
+    await client.flush()
+
+    const [a, b] = events().filter((event) => event.name !== "$pageview")
+
+    expect(b?.anonymousId).toMatch(UUID)
+    expect(b?.anonymousId).not.toBe(a?.anonymousId)
+  })
+
+  it("notices a user switch recorded by another tab", async () => {
+    const client = await full()
+
+    client.consent(true)
+    client.identify("u_1")
+    const before = client.anonymousId()
+
+    localStorage.setItem(`mirafive:${NS}:uid`, `someone-else.${Date.now()}`)
+    client.identify("u_1")
+
+    expect(client.anonymousId()).not.toBe(before)
+  })
+
+  it("coerces a numeric user id and refuses empty ones", async () => {
+    setUrl("http://localhost:3000/")
+    const client = await mira({ mode: "full", plugins: [identity()], trackLocalhost: true })
+
+    client.consent(true)
+    client.identify(42 as unknown as string)
+    client.identify("")
+    client.identify(null as unknown as string)
+    client.identify("  ")
+    await client.flush()
+
+    expect(events().map((event) => [event.name, event.userId])).toEqual([["$identify", "42"]])
+    expect(warnings()).toContain("[mirafive] identify() needs a user id of 1–256 characters")
+  })
+})

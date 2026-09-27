@@ -65,12 +65,9 @@ export const autocapture = ({ selectorAttributes = [] }: AutocaptureOptions = {}
         return
       }
 
-      const read = (name: string): string | undefined =>
-        element.getAttribute(name)?.slice(0, 128) || undefined
+      const read = (name: string): string | undefined => core.cut(element.getAttribute(name), 128)
       const found: Properties = {}
-      const text = element.matches(labelled)
-        ? element.textContent?.replace(/\s+/g, " ").trim().slice(0, 128)
-        : ""
+      const text = element.matches(labelled) && element.textContent?.replace(/\s+/g, " ").trim()
       const list = classes(element)
 
       for (const name of attributes) {
@@ -85,7 +82,7 @@ export const autocapture = ({ selectorAttributes = [] }: AutocaptureOptions = {}
           $el_selector: selector(element),
           $el_id: stable(element.id) ? element.id : undefined,
           $el_classes: list.length ? list : undefined,
-          $el_text: text || undefined,
+          $el_text: core.cut(text || undefined, 128),
           $el_href:
             element instanceof HTMLAnchorElement && /^https?:/.test(element.href)
               ? core.clean(element.href)

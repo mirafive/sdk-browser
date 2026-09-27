@@ -43,6 +43,15 @@ export const flags = ({ bootstrap, overrides = {}, refreshSeconds = 300 }: Flags
 
     const lookup = (): boolean => full && !!state.consent?.targeting && !core.optedOut()
 
+    // One throwing listener must not skip the others, or throw into consent() or identify().
+    const call = (listener: () => void): void => {
+      try {
+        listener()
+      } catch (error) {
+        core.warn("onFlags listener threw: " + String(error))
+      }
+    }
+
     const notify = (): void => {
       if (loaded) {
         state.flags = current
@@ -52,7 +61,7 @@ export const flags = ({ bootstrap, overrides = {}, refreshSeconds = 300 }: Flags
         }
 
         core.emit("flags")
-        listeners.forEach((listener) => listener())
+        listeners.forEach(call)
       }
     }
 
@@ -175,15 +184,19 @@ export const flags = ({ bootstrap, overrides = {}, refreshSeconds = 300 }: Flags
     const drain = (): void => {
       if (state.consent?.experiments && state.mode === "full" && !core.optedOut()) {
         for (const key in held) {
-          sent.add(key)
-          held[key]?.()
-          delete held[key]
+          // Marked sent only once sent: a check that fails now (the user not identified yet) may pass later.
+          if (held[key]?.()) {
+            sent.add(key)
+            delete held[key]
+          }
         }
       }
     }
 
-    const expose = (key: string, variant: string): void =>
+    const expose = (key: string, variant: string): true => {
       core.send("$exposure", { $experiment: key, $variant: variant, $boot: state.boot ?? 0 })
+      return true
+    }
 
     const answer = (key: string): Answer => {
       const flag = current.flags?.[key]
@@ -227,15 +240,21 @@ export const flags = ({ bootstrap, overrides = {}, refreshSeconds = 300 }: Flags
       if (!flag) {
         const value = current.values?.[key]
 
+        if (!value) {
+          return undefined
+        }
+
+        // What the page read stays, so a later document cannot switch an experiment mid-page.
+        const kept = (frozen[key] ??= { variant: value[0], reason: value[2] ? "SPLIT" : "STATIC" })
+        const variant = kept.reason === "SPLIT" ? kept.variant : value[0]
+        const { unit } = current
+
         // A server-decided experiment counts only for the user it was decided for.
-        return (
-          value && [
-            value[0],
-            value[1],
-            value[2] &&
-              (() => current.unit === String(fnv1a32(state.user?.id ?? "")) && expose(key, value[0]))
-          ]
-        )
+        return [
+          variant,
+          variant === value[0] ? value[1] : undefined,
+          value[2] && (() => unit === String(fnv1a32(state.user?.id ?? "")) && expose(key, variant))
+        ]
       }
 
       let decision = evaluate(flag, facts(flag))
@@ -259,9 +278,12 @@ export const flags = ({ bootstrap, overrides = {}, refreshSeconds = 300 }: Flags
               // Sent only when the id it is counted under still gives the variant shown.
               const again = evaluate(flag, facts(flag))
 
-              if ("variant" in again && again.variant === variant && again.reason === reason) {
+              return (
+                "variant" in again &&
+                again.variant === variant &&
+                again.reason === reason &&
                 expose(key, variant)
-              }
+              )
             }
           : undefined
       ]
@@ -293,7 +315,7 @@ export const flags = ({ bootstrap, overrides = {}, refreshSeconds = 300 }: Flags
         listeners.add(listener)
 
         if (loaded) {
-          listener()
+          call(listener)
         }
 
         return () => listeners.delete(listener)
@@ -345,7 +367,16 @@ export const flags = ({ bootstrap, overrides = {}, refreshSeconds = 300 }: Flags
         drain()
         notify()
       }),
-      core.on("user", notify),
+      core.on("user", () => {
+        drain()
+
+        // Membership may differ for the signed-in person.
+        if (lookup()) {
+          void load()
+        }
+
+        notify()
+      }),
       () => {
         clearInterval(timer)
         clearTimeout(waiting)

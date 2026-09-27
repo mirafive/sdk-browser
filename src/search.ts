@@ -25,9 +25,13 @@ export const siteSearch = ({
     const settle = (): void => {
       clearTimeout(timer)
 
-      if (pending) {
-        search(...pending)
-        pending = undefined
+      const settled = pending
+
+      // Cleared first: search() queues an event, which may flush, which settles again.
+      pending = undefined
+
+      if (settled) {
+        search(...settled)
       }
     }
 

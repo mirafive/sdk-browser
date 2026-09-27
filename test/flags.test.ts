@@ -258,7 +258,7 @@ describe("bootstrap", () => {
     expect(again.flag("new-checkout", false)).toBe(true)
   })
 
-  it("sends no server-decided exposure when read before the matching identify()", async () => {
+  it("sends a server-decided exposure once identify() names the user it was decided for, even when read before", async () => {
     bootstrapBlock({
       v: 1,
       at: NOW,
@@ -275,7 +275,7 @@ describe("bootstrap", () => {
     client.flag("pricing-test", "a")
     await client.flush()
 
-    expect(exposures()).toEqual([])
+    expect(exposures()).toEqual([{ $experiment: "pricing-test", $variant: "b", $boot: 1 }])
   })
 
   it("sends the exposure when the identified user matches", async () => {
@@ -632,5 +632,83 @@ describe("listeners and refetching", () => {
     await tick(600_000)
 
     expect(flagRequests()).toHaveLength(1)
+  })
+})
+
+describe("review fixes", () => {
+  it("keeps a server-decided experiment's variant when the document arrives", async () => {
+    bootstrapBlock({ v: 1, at: NOW, values: { "pricing-test": ["b", null, 1] }, browser: ["other"] })
+    // Without the experiments scope the fresh document alone would answer the default, "a".
+    w.__mirafive_consent = { statistics: true }
+    const answer = Promise.withResolvers<Response>()
+
+    route((request) => (request.url.includes("/v1/flags/") ? answer.promise : undefined))
+    const client = await full()
+
+    expect(client.flag("pricing-test", "x")).toBe("b")
+    answer.resolve(json(doc))
+    await tick()
+
+    expect(client.flag("new-checkout", false)).toBe(true)
+    expect(client.flag("pricing-test", "x")).toBe("b")
+  })
+
+  it("keeps a marked value when a later values view changes it", async () => {
+    bootstrapBlock({
+      v: 1,
+      at: NOW - 61_000,
+      values: { "pricing-test": ["b", null, 1], "new-checkout": ["off"] }
+    })
+    route((request) =>
+      request.url.includes("/v1/flags/")
+        ? json({ ...values, values: { "pricing-test": ["a"], "new-checkout": ["on"] } })
+        : undefined
+    )
+    const client = await mira({ plugins: [flags()] })
+
+    expect(client.flag("pricing-test", "x")).toBe("b")
+    expect(client.flag("new-checkout", true)).toBe(false)
+    await tick()
+
+    expect(client.flag("pricing-test", "x")).toBe("b")
+    expect(client.flag("new-checkout", false)).toBe(true)
+  })
+
+  it("looks segments up again after identify() and reset()", async () => {
+    w.__mirafive_consent = { statistics: true, targeting: true }
+    serve(membership([]))
+    const client = await full()
+
+    await tick()
+    client.identify("u_1")
+    await tick()
+    client.reset()
+    await tick()
+
+    expect(
+      flagRequests().map((request) => [request.method, JSON.parse(request.body || "{}").identified])
+    ).toEqual([
+      ["POST", false],
+      ["POST", true],
+      ["POST", false]
+    ])
+  })
+
+  it("isolates a throwing onFlags listener", async () => {
+    setUrl("http://localhost:3000/")
+    serve()
+    const client = await mira({ mode: "full", plugins: [identity(), flags()], trackLocalhost: true })
+    const heard = vi.fn()
+
+    client.onFlags(() => {
+      throw new Error("boom")
+    })
+    client.onFlags(heard)
+    await tick()
+    heard.mockClear()
+
+    expect(() => client.consent(true)).not.toThrow()
+    expect(heard).toHaveBeenCalledTimes(1)
+    expect(warnings()).toContain("[mirafive] onFlags listener threw: Error: boom")
   })
 })

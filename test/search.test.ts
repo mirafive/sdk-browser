@@ -136,3 +136,35 @@ describe("siteSearch()", () => {
     expect(warnings()).toContain('[mirafive] siteSearch() does nothing in mode "consentless"')
   })
 })
+
+describe("review fixes", () => {
+  it("does not recurse when a pending term meets a flush at flushAt", async () => {
+    setUrl("https://shop.example/search?q=boots")
+    const client = await consented()
+
+    await tick(10)
+
+    for (let index = 0; index < 18; index++) {
+      client.track("e" + index)
+    }
+
+    expect(() => client.track("last")).not.toThrow()
+    await client.flush()
+
+    expect(searches()).toEqual([["boots", "https://shop.example/search"]])
+    expect(requests.length).toBeLessThan(4)
+  })
+
+  it("reads each new term while the cleaned page stays the same", async () => {
+    setUrl("https://shop.example/search?q=r")
+    const client = await consented()
+
+    await tick(200)
+    history.replaceState({}, "", "/search?q=red")
+    await tick(1000)
+    await client.flush()
+
+    expect(events().filter((event) => event.name === "$pageview")).toHaveLength(1)
+    expect(searches()).toEqual([["red", "https://shop.example/search"]])
+  })
+})

@@ -42,7 +42,7 @@ export interface Mira<Events extends EventMap = EventMap> {
     ...properties: undefined extends Events[Name] ? [properties?: Events[Name]] : [properties: Events[Name]]
   ): void
   /** Queues `$pageview` for the current page, or the one given. */
-  pageview(page?: Page): void
+  pageview(page?: Page | null): void
   flush(): Promise<void>
   use(plugin: Plugin): void
   destroy(): void
@@ -148,10 +148,19 @@ export interface MiraCore {
   ready(run: () => void): void
   /** Sends the queue; `true` uses `sendBeacon`, as on page hide. */
   flush(unload?: boolean): Promise<void>
-  /** Empties the queue without sending. */
+  /** Empties the queue and the hold buffer, and cancels batches waiting for a retry. */
   clear(): void
+  /**
+   * Holds events (at most 100) instead of dropping them while mode "full" waits for statistics consent:
+   * for a loader that fetches identity() after a grant. identity() releases them when it applies an answer.
+   */
+  hold(): void
+  /** Ends holding: `true` queues the held events (with their original times), `false` drops them. */
+  release(keep: boolean): void
   /** The URL with only campaign and click-id parameters, the fragment only in hash mode. */
   clean(url: string): string
+  /** Cuts text to `max` UTF-16 units without splitting a surrogate pair; empty becomes `undefined`. */
+  cut(text: string | null | undefined, max: number): string | undefined
   uuid(): string
   /** Once per message, only in development (a local hostname). */
   warn(message: string): void

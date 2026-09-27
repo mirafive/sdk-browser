@@ -201,3 +201,21 @@ describe("pageviews()", () => {
     expect(names()).toEqual(["$pageview"])
   })
 })
+
+describe("review fixes", () => {
+  it("dedupes on the cleaned URL", async () => {
+    const client = await mira({ plugins: [pageviews()] })
+
+    await tick()
+    history.pushState({}, "", "/pricing?utm_source=news&secret=2")
+    await tick()
+    history.pushState({}, "", "/pricing?utm_source=mail")
+    await tick()
+    await client.flush()
+
+    expect(pages()).toEqual([
+      "https://shop.example/pricing?utm_source=news",
+      "https://shop.example/pricing?utm_source=mail"
+    ])
+  })
+})

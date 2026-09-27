@@ -7,17 +7,17 @@ websites and web apps, hosted in the EU, with one small import per feature.
 
 | Import | min + gzip |
 |---|---|
-| `@mirafive/sdk-browser` (`createMira`) | 2.04 kB |
-| `…` + `@mirafive/sdk-browser/pageviews` | 2.31 kB |
-| `@mirafive/sdk-browser/identity` | 1.07 kB |
+| `@mirafive/sdk-browser` (`createMira`) | 2.46 kB |
+| `…` + `@mirafive/sdk-browser/pageviews` | 2.75 kB |
+| `@mirafive/sdk-browser/identity` | 1.14 kB |
 | `@mirafive/sdk-browser/autocapture` | 0.86 kB |
 | `@mirafive/sdk-browser/search` | 0.40 kB |
-| `@mirafive/sdk-browser/flags` (includes the flag evaluator) | 2.82 kB |
+| `@mirafive/sdk-browser/flags` (includes the flag evaluator) | 2.91 kB |
 | `@mirafive/sdk-browser/experiments` | 0.47 kB |
-| everything together | 6.74 kB |
+| everything together | 7.30 kB |
 
 What you do not import is not shipped (`sideEffects: false`, one entry per feature).
-A consentless site with automatic pageviews ships 2.31 kB. Each plugin row is measured
+A consentless site with automatic pageviews ships 2.75 kB. Each plugin row is measured
 on its own, as a bundler adds it to a page that already has the core.
 
 ## Install
@@ -76,6 +76,9 @@ MIRA FIVE.
   - `consent({ statistics, experiments, targeting })`: by scope; a scope you leave
     out keeps its last answer.
   - `consent(false)`: forgets the ids and the user, clears the queue.
+  - Events before statistics consent are dropped, `$identify` included: call
+    `identify()` again after the grant (the user id is kept in memory and stamped on
+    later events, but the `$identify` event itself is not replayed).
   - A CMP that knows the stored answer before the SDK loads sets
     `window.__mirafive_consent = { statistics, experiments, targeting }` (or `false`)
     first; the SDK applies it at start, so the landing pageview is counted with the
@@ -136,8 +139,8 @@ import { experiments } from "@mirafive/sdk-browser/experiments" // needs flags +
 | `host` | `https://events.mirafive.io` | must have a scheme |
 | `mode` | `"consentless"` | `"full"` needs `identity()` |
 | `plugins` | `[]` | |
-| `flushAt` | `20` | send once this many events are queued (each batch also stays under ~48 KB) |
-| `flushAfterMs` | `5000` | send this long after the first queued event |
+| `flushAt` | `20` | send once this many events are queued, 1–1000 (each batch also stays under ~48 KB) |
+| `flushAfterMs` | `5000` | send this long after the first queued event, 50–300000 |
 | `trackLocalhost` | `false` | |
 
 `createMira` throws a `TypeError` for a `secretKey` option (secret keys are
@@ -147,12 +150,12 @@ Nothing else throws; transport problems are dropped with a warning in developmen
 | Member | Plugin | |
 |---|---|---|
 | `track(name, properties?)` | core | queue an event; names starting with `$` are reserved |
-| `pageview(page?: { url?, title?, referrer? })` | core | queue `$pageview` for the current or given page |
+| `pageview(page?: { url?, title?, referrer? } \| null)` | core | queue `$pageview` for the current or given page |
 | `flush(): Promise<void>` | core | send now |
 | `use(plugin)` | core | add a plugin after creation |
 | `destroy()` | core | stop timers and listeners, undo patches, drop the queue |
 | `consent(answer: boolean \| { statistics?, experiments?, targeting? })` | identity | see above |
-| `identify(userId, traits?)` | identity | `$identify`, then `userId` on later events; a different user starts fresh ids |
+| `identify(userId, traits?)` | identity | `$identify`, then `userId` on later events; a different user starts fresh ids; ids are 1–256 characters (numbers are turned into strings) |
 | `reset()` | identity | forget ids, user and session |
 | `anonymousId(): string \| undefined` | identity | for linking server-side events; `undefined` without statistics consent |
 | `search(query)` | search | queue `$search` |
@@ -241,8 +244,10 @@ export const outboundLinks = (): Plugin => ({
 | `on(hook, listener): () => void` | subscribe to a hook |
 | `emit(hook, argument?)` | run a hook; `false` when a listener returned `false` |
 | `ready(run)` | run in a microtask: after every plugin given at creation is set up |
-| `flush(unload?)`, `clear()` | send or empty the queue |
+| `flush(unload?)`, `clear()` | send the queue; empty it, the hold buffer and pending retries |
+| `hold()`, `release(keep)` | hold events while waiting for identity (below) |
 | `clean(url)` | the URL cleaned as pageviews are |
+| `cut(text, max)` | cut text without splitting a surrogate pair (use it for every cut) |
 | `uuid()`, `warn(message)`, `optedOut()` | a v4 UUID; a development warning (once); DNT, GPC, ignore or prerendering |
 
 | Hook | Argument | When |
@@ -268,6 +273,14 @@ plugins are present. `createMira` checks for a plugin *named* `"identity"`: a lo
 that fetches identity later passes a placeholder `{ name: "identity", setup() {} }` and
 calls `use(identity())` when the chunk arrives; the landing pageview is then resent on
 the first grant and a pre-set `window.__mirafive_consent` still counts as `$boot: 1`.
+
+Between a consent grant and identity arriving, call `core.hold()`: events (pageviews,
+autocapture, `track`) are then kept in a buffer of at most 100 instead of dropped.
+identity releases the buffer when it applies an answer: with statistics consent the
+events are queued with their original times and the new ids; otherwise they are
+dropped. `core.release(keep)` ends holding by hand. Without `hold()` events before the
+grant are dropped as usual (the landing pageview is resent either way).
+
 Add `flags()` before `experiments()`.
 
 ## Framework / runtime notes
@@ -282,8 +295,14 @@ Add `flags()` before `experiments()`.
   `Cache-Control: private, no-store` with that response.
 - CSP: `connect-src https://events.mirafive.io` (or your `host`).
 - Batches are `text/plain` POSTs (no CORS preflight); on page hide they go by
-  `navigator.sendBeacon`, else `fetch` with `keepalive`. Failed sends retry up to three
-  times with backoff, honouring `Retry-After` up to 10 s.
+  `navigator.sendBeacon`, else `fetch` with `keepalive`; a batch still in flight is sent
+  again by beacon (its batch id makes the copy count once). A failed send is tried up to
+  three times in all, with backoff, honouring `Retry-After` up to 10 s.
+- An event the server would refuse is dropped on its own (a development warning names
+  it) so it cannot take the batch down: properties over 32 KB of UTF-8 JSON, over 64
+  leaf values (a list or an empty object counts as one), deeper than 5 levels, a key
+  over 128 characters, or a string with a lone surrogate. Page URL, title and referrer
+  are cut to 2048 / 512 / 2048 characters without splitting a character.
 - Insecure contexts (plain `http`) work: ids come from `crypto.getRandomValues` there.
 
 ## Troubleshooting
@@ -330,8 +349,8 @@ Facts for agents:
   `flags`, `experiments`). There is no default export.
 - The only key is the source's public **website key**, passed as `key`. Env vars:
   `VITE_MIRAFIVE_KEY`, `NEXT_PUBLIC_MIRAFIVE_KEY`, `PUBLIC_MIRAFIVE_KEY`,
-  `NUXT_PUBLIC_MIRAFIVE_KEY`; `MIRAFIVE_HOST` (optional, default
-  `https://events.mirafive.io`).
+  `NUXT_PUBLIC_MIRAFIVE_KEY`. A custom host goes in the `host` option; browser code
+  cannot read server env vars such as `MIRAFIVE_HOST`.
 - Never ship `MIRAFIVE_SECRET_KEY` to a browser; passing `secretKey` throws, and a
   secret key in a URL is refused and marked exposed.
 - `mode: "full"` requires `identity()` in `plugins` (else `createMira` throws) and a

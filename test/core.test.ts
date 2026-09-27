@@ -1,6 +1,7 @@
 import { describe, expect, expectTypeOf, it, vi } from "vitest"
 
-import type { Mira, Plugin } from "../src/index.ts"
+import { identity } from "../src/identity.ts"
+import type { Mira, MiraCore, Plugin } from "../src/index.ts"
 import {
   HOST,
   KEY,
@@ -645,20 +646,214 @@ describe("plugins", () => {
     expect(events()[0]?.properties).toEqual({ query: "shoes" })
   })
 
-  it("lets a framework append its token to context.sdk", async () => {
+  it("lets the hosted tracker name itself in context.sdk", async () => {
     const client = await mira({
-      plugins: [{ name: "react", setup: (core) => void (core.state.context.sdk += " react") }]
+      plugins: [
+        { name: "tracker", setup: (core) => void (core.state.context.sdk = "mirafive-tracker/0.5.0") }
+      ]
     })
 
     client.track("a")
     await client.flush()
 
-    expect(batches()[0]?.context).toEqual({ sdk: "mirafive-browser/0.5.0 react" })
+    expect(batches()[0]?.context).toEqual({ sdk: "mirafive-tracker/0.5.0" })
   })
 
   it("types the client", async () => {
     const { createMira } = await load()
 
     expectTypeOf(createMira).returns.toEqualTypeOf<Mira>()
+  })
+})
+
+describe("review fixes", () => {
+  it("cuts page fields for every event without splitting a surrogate pair", async () => {
+    document.title = "t".repeat(511) + "😀"
+    define(document, "referrer", "https://ref.example/" + "r".repeat(2027) + "😀")
+    const client = await mira()
+
+    client.pageview()
+    await client.flush()
+
+    const page = events()[0]?.page
+
+    expect(page?.title).toBe("t".repeat(511))
+    expect(page?.referrer).toHaveLength(2047)
+    expect(requests[0]?.body).not.toMatch(/\\ud[89a-f]/)
+  })
+
+  it("cuts the page URL of track() too", async () => {
+    setUrl("https://shop.example/" + "p".repeat(3000))
+    const client = await mira()
+
+    client.track("a")
+    await client.flush()
+
+    expect(events()[0]?.page?.url).toHaveLength(2048)
+  })
+
+  it.each([
+    ["65 leaves", Object.fromEntries(Array.from({ length: 65 }, (_, index) => [`k${index}`, index]))],
+    [
+      "65 leaves counting empty objects and lists",
+      {
+        a: {},
+        b: [],
+        ...Object.fromEntries(Array.from({ length: 63 }, (_, index) => [`k${index}`, { x: index }]))
+      }
+    ],
+    ["depth 6", { a: { b: { c: { d: { e: { f: 1 } } } } } }],
+    ["a key over 128 characters", { ["k".repeat(129)]: 1 }],
+    ["over 32768 bytes of UTF-8", { text: "€".repeat(11_000) }],
+    ["a lone surrogate", { text: "a\ud800b" }]
+  ])("drops one event with %s and keeps the rest of the batch", async (_, properties) => {
+    setUrl("http://localhost:3000/")
+    const client = await mira({ trackLocalhost: true })
+
+    client.track("bad", properties)
+    client.track("good", { plan: "pro" })
+    await client.flush()
+
+    expect(names()).toEqual(["good"])
+    expect(warnings()).toContain("[mirafive] event dropped: bad")
+  })
+
+  it("accepts what the server accepts: 64 leaves, lists as one leaf, index-keyed objects, depth 5", async () => {
+    const client = await mira()
+
+    client.track("leaves", Object.fromEntries(Array.from({ length: 64 }, (_, index) => [`k${index}`, index])))
+    client.track("lists", {
+      items: Array.from({ length: 200 }, (_, index) => index),
+      indexed: { 0: "a", 1: "b" }
+    })
+    client.track("deep", { a: { b: { c: { d: { e: 1 } } } } })
+    client.track("bytes", { text: "x".repeat(32_000) })
+    await client.flush()
+
+    expect(names()).toEqual(["leaves", "lists", "deep", "bytes"])
+  })
+
+  it("beacons a batch still in flight when the page hides", async () => {
+    route((request) => (request.url.includes("/v1/batch/") ? new Promise(() => undefined) : undefined))
+    const client = await mira()
+
+    client.track("a")
+    void client.flush()
+    await tick()
+    window.dispatchEvent(new Event("pagehide"))
+
+    expect(beacon).toHaveBeenCalledTimes(1)
+    expect(requests.map((request) => request.via)).toEqual(["fetch", "beacon"])
+    expect(requests[1]?.body).toBe(requests[0]?.body)
+  })
+
+  it.each([
+    ["clear()", (client: Mira) => client.use({ name: "x", setup: (core) => core.clear() })],
+    ["destroy()", (client: Mira) => client.destroy()]
+  ])("cancels a batch waiting for a retry on %s", async (_, stop) => {
+    route(() => json({}, 503))
+    const client = await mira()
+
+    client.track("a")
+    void client.flush()
+    await tick()
+    stop(client)
+    await tick(20_000)
+
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+
+  it("requires a string event name and treats pageview(null) as pageview()", async () => {
+    setUrl("http://localhost:3000/")
+    const client = await mira({ trackLocalhost: true })
+
+    client.track(123 as unknown as string)
+    client.pageview(null)
+    await client.flush()
+
+    expect(names()).toEqual(["$pageview"])
+    expect(warnings()).toContain("[mirafive] bad name: 123")
+  })
+
+  it("clamps flushAt and flushAfterMs and warns in development", async () => {
+    setUrl("http://localhost:3000/")
+    const client = await mira({ trackLocalhost: true, flushAt: 5000, flushAfterMs: 1 })
+
+    client.track("a")
+    await tick(49)
+    expect(requests).toHaveLength(0)
+    await tick(1)
+
+    expect(requests).toHaveLength(1)
+    expect(warnings()).toEqual(["[mirafive] flushAt: 1–1000", "[mirafive] flushAfterMs: 50–300000"])
+  })
+})
+
+const loader = async () => {
+  let core: MiraCore | undefined
+  const client = await mira({
+    mode: "full",
+    plugins: [{ name: "identity", setup: (given) => void (core = given) }]
+  })
+
+  return { client, core: core as MiraCore }
+}
+
+describe("hold()", () => {
+  it("holds events between a grant and identity(), then sends them with their times and ids", async () => {
+    const { client, core } = await loader()
+
+    core.hold()
+    client.track("a")
+    vi.setSystemTime(1_727_430_001_000)
+    client.track("b")
+    w.__mirafive_consent = { statistics: true }
+    client.use(identity())
+    await client.flush()
+
+    expect(events().map((event) => [event.name, event.time, !!event.anonymousId])).toEqual([
+      ["a", 1_727_430_000_000, true],
+      ["b", 1_727_430_001_000, true]
+    ])
+  })
+
+  it("drops held events on a decline", async () => {
+    const { client, core } = await loader()
+
+    core.hold()
+    client.track("a")
+    client.use(identity())
+    client.consent(false)
+    client.consent(true)
+    await client.flush()
+
+    expect(requests).toHaveLength(0)
+  })
+
+  it("holds at most 100 events", async () => {
+    const { client, core } = await loader()
+
+    core.hold()
+
+    for (let index = 0; index < 150; index++) {
+      client.track("e" + index)
+    }
+
+    client.use(identity())
+    client.consent(true)
+    await client.flush()
+
+    expect(events()).toHaveLength(100)
+  })
+
+  it("holds nothing without hold()", async () => {
+    const { client } = await loader()
+
+    client.track("a")
+    client.use(identity())
+    client.consent(true)
+    await client.flush()
+
+    expect(requests).toHaveLength(0)
   })
 })

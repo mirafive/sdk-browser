@@ -16,21 +16,25 @@ export const identity = (): Plugin => ({
     const prefix = `mirafive:${ns}:`
     const memory: Record<string, string | undefined> = {}
     let resent = false
+    // Memory stands in only once storage has thrown; otherwise a stale tab would restore ids another tab removed.
+    let broken = false
 
     if (core.options.mode !== "full") {
       return core.warn('identity() needs mode "full"')
     }
 
     const read = (name: string, maxAge: number): string | undefined => {
-      let value: string | null | undefined
+      let value: string | null | undefined = memory[name]
 
-      try {
-        value = localStorage.getItem(prefix + name)
-      } catch {
-        // Storage can throw (private modes, blocked contexts); memory stands in for this page.
+      if (!broken) {
+        try {
+          value = localStorage.getItem(prefix + name)
+        } catch {
+          broken = true
+        }
       }
 
-      const [id, seen] = (value ?? memory[name])?.split(".") ?? []
+      const [id, seen] = value?.split(".") ?? []
 
       return id && (seen === undefined || Date.now() - +seen < maxAge) ? id : undefined
     }
@@ -38,14 +42,16 @@ export const identity = (): Plugin => ({
     const write = <Id extends string | undefined>(name: string, id: Id): Id => {
       const value = (memory[name] = id && `${id}.${Date.now()}`)
 
-      try {
-        if (value) {
-          localStorage.setItem(prefix + name, value)
-        } else {
-          localStorage.removeItem(prefix + name)
+      if (!broken) {
+        try {
+          if (value) {
+            localStorage.setItem(prefix + name, value)
+          } else {
+            localStorage.removeItem(prefix + name)
+          }
+        } catch {
+          broken = true
         }
-      } catch {
-        // Kept in memory.
       }
 
       return id
@@ -130,6 +136,7 @@ export const identity = (): Plugin => ({
         state.context = { sdk: state.context.sdk }
       }
 
+      core.release(!!now.statistics)
       core.emit("consent", now)
     }
 
@@ -137,7 +144,13 @@ export const identity = (): Plugin => ({
 
     core.expose({
       consent,
-      identify: (userId: string, traits?: Properties) => {
+      identify: (given: string | number | null | undefined, traits?: Properties) => {
+        const userId = String(given ?? "")
+
+        if (!userId.trim() || userId.length > 256) {
+          return core.warn("identify() needs a user id of 1–256 characters")
+        }
+
         if (userId.includes("@")) {
           core.warn("identify(): the id looks like an email")
         }

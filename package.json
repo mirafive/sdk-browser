@@ -69,7 +69,7 @@
       "path": "dist/index.js",
       "import": "{ createMira }",
       "gzip": true,
-      "limit": "2.1 kB"
+      "limit": "2.54 kB"
     },
     {
       "name": "core + pageviews",
@@ -82,14 +82,14 @@
         "dist/pageviews.js": "{ pageviews }"
       },
       "gzip": true,
-      "limit": "2.38 kB"
+      "limit": "2.84 kB"
     },
     {
       "name": "identity",
       "path": "dist/identity.js",
       "import": "{ identity }",
       "gzip": true,
-      "limit": "1.1 kB"
+      "limit": "1.18 kB"
     },
     {
       "name": "autocapture",
@@ -103,14 +103,14 @@
       "path": "dist/search.js",
       "import": "{ siteSearch }",
       "gzip": true,
-      "limit": "0.41 kB"
+      "limit": "0.42 kB"
     },
     {
       "name": "flags",
       "path": "dist/flags.js",
       "import": "{ flags }",
       "gzip": true,
-      "limit": "2.91 kB"
+      "limit": "3.01 kB"
     },
     {
       "name": "experiments",
@@ -140,7 +140,7 @@
         "dist/experiments.js": "{ experiments }"
       },
       "gzip": true,
-      "limit": "6.93 kB"
+      "limit": "7.52 kB"
     }
   ],
   "engines": {

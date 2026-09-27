@@ -184,3 +184,18 @@ describe("autocapture()", () => {
     expect(requests).toHaveLength(0)
   })
 })
+
+describe("review fixes", () => {
+  it("never splits a surrogate pair when cutting text or attributes", async () => {
+    html(`<button data-track="${"x".repeat(127)}😀">${"y".repeat(127)}😀</button>`)
+    const client = await mira({ plugins: [autocapture()] })
+
+    click("button")
+
+    const [properties] = await captured(client)
+
+    expect(properties?.["$el_text"]).toBe("y".repeat(127))
+    expect(properties?.["$el_attrs"]).toEqual({ "data-track": "x".repeat(127) })
+    expect(requests[0]?.body).not.toMatch(/\\ud[89a-f]/)
+  })
+})
