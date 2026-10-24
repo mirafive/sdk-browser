@@ -1,4 +1,4 @@
-// Vendored from mirafive/protocol 5037788489cb. Do not edit; run bun run vendor:protocol.
+// Vendored from mirafive/protocol b1346ccb992a. Do not edit; run bun run vendor:protocol.
 export const KEY_PATTERN: RegExp = /^mf_[a-z0-9]{8}_[A-Za-z0-9_-]+$/
 
 /** The part before the last `_`: names local storage so the key's tail is never stored. */

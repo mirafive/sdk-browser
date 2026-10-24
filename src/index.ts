@@ -18,8 +18,6 @@ import { VERSION } from "./version.ts"
 export type {
   ConsentAnswer,
   EventMap,
-  FlagBootstrap,
-  FlagState,
   Json,
   Mira,
   MiraCore,
@@ -338,13 +336,8 @@ export const createMira = <Events extends EventMap = EventMap>(options: MiraOpti
     }
   }
 
-  for (const name of "consent identify reset anonymousId search flag config onFlags setFlagProperties".split(
-    " "
-  )) {
-    client[name] = (...args: unknown[]) => (
-      warn(name + "() needs its plugin"),
-      name === "onFlags" ? () => {} : args[1]
-    )
+  for (const name of "consent identify reset anonymousId search".split(" ")) {
+    client[name] = () => warn(name + "() needs its plugin")
   }
 
   const core: MiraCore = {

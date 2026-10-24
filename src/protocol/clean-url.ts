@@ -1,4 +1,4 @@
-// Vendored from mirafive/protocol 5037788489cb. Do not edit; run bun run vendor:protocol.
+// Vendored from mirafive/protocol b1346ccb992a. Do not edit; run bun run vendor:protocol.
 import { KEPT_QUERY_PARAMETERS } from "./limits.ts"
 
 const kept = (part: string): boolean => {

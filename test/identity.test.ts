@@ -113,7 +113,7 @@ describe("consent(true)", () => {
 })
 
 describe("scopes", () => {
-  it("keeps each scope's last answer until it is named again", async () => {
+  it("keeps the last answer until statistics is named again", async () => {
     const client = await full()
     const seen: unknown[] = []
 
@@ -121,22 +121,35 @@ describe("scopes", () => {
       name: "probe",
       setup: (core) => void core.on("consent", (answer) => seen.push({ ...answer }))
     })
-    client.consent({ experiments: true })
     client.consent(true)
-    client.consent({ targeting: true, experiments: false })
+    client.consent({})
+    client.consent({ statistics: false })
 
-    expect(seen).toEqual([
-      { experiments: true },
-      { experiments: true, statistics: true },
-      { experiments: false, statistics: true, targeting: true }
-    ])
+    expect(seen).toEqual([{ statistics: true }, { statistics: true }, { statistics: false }])
   })
 
-  it("sends nothing with experiments or targeting alone", async () => {
+  it("accepts and ignores the retired experiments and targeting keys", async () => {
+    const client = await full()
+    const seen: unknown[] = []
+
+    client.use({
+      name: "probe",
+      setup: (core) => void core.on("consent", (answer) => seen.push({ ...answer }))
+    })
+    await tick()
+    client.consent({ experiments: true })
+    client.consent({ targeting: true })
+    client.consent({ statistics: true, experiments: true, targeting: true })
+
+    expect(seen).toEqual([{}, {}, { statistics: true }])
+    expect(requests).toHaveLength(0)
+  })
+
+  it("sends nothing with targeting and experiments alone", async () => {
     const client = await full()
 
     await tick()
-    client.consent({ experiments: true, targeting: true })
+    client.consent({ targeting: true, experiments: true })
     client.track("a")
     await client.flush()
 
@@ -150,12 +163,12 @@ describe("scopes", () => {
     client.use({ name: "probe", setup: (core) => void core.on("consent", () => (mode = core.state.mode)) })
     client.consent(true)
     client.track("a")
-    client.consent({ statistics: false, experiments: true })
+    client.consent({ statistics: false })
     await client.flush()
 
     expect(requests).toHaveLength(0)
     expect(mode).toBe("consentless")
-    expect(stored("aid")).not.toBeNull()
+    expect(stored("aid")).toBeNull()
   })
 })
 
@@ -192,7 +205,7 @@ describe("consent(false)", () => {
 
 describe("window.__mirafive_consent", () => {
   it("applies a stored answer at setup", async () => {
-    w.__mirafive_consent = { statistics: true, experiments: false, targeting: false }
+    w.__mirafive_consent = { statistics: true }
     const client = await full()
 
     await tick()
@@ -230,29 +243,6 @@ describe("window.__mirafive_consent", () => {
 })
 
 describe("ids", () => {
-  it("adopts window.__mirafive_aid_next as the anonymous id, once", async () => {
-    w.__mirafive_aid_next = "0199a3f2-7c1e-7a4b-9f00-000000000001"
-    const client = await full()
-
-    client.consent(true)
-
-    expect(client.anonymousId()).toBe("0199a3f2-7c1e-7a4b-9f00-000000000001")
-    expect(w.__mirafive_aid_next).toBeUndefined()
-    client.reset()
-    client.consent(true)
-    expect(client.anonymousId()).not.toBe("0199a3f2-7c1e-7a4b-9f00-000000000001")
-  })
-
-  it("keeps a stored anonymous id over a pending one", async () => {
-    localStorage.setItem(`mirafive:${NS}:aid`, "5f0c1c8e-3e0e-4a57-9d59-3f7f2a6d1e44.1727000000000")
-    w.__mirafive_aid_next = "0199a3f2-7c1e-7a4b-9f00-000000000001"
-    const client = await full()
-
-    client.consent(true)
-
-    expect(client.anonymousId()).toBe("5f0c1c8e-3e0e-4a57-9d59-3f7f2a6d1e44")
-  })
-
   it("reads a bare legacy anonymous id and stamps it", async () => {
     localStorage.setItem(`mirafive:${NS}:aid`, "5f0c1c8e-3e0e-4a57-9d59-3f7f2a6d1e44")
     const client = await full()

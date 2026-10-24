@@ -1,6 +1,6 @@
-import type { Bootstrap, Flag, FlagValue, Json, Mode, SnippetEntry } from "./protocol/types.ts"
+import type { Json, Mode } from "./protocol/types.ts"
 
-export type { Bootstrap as FlagBootstrap, Json, Mode }
+export type { Json, Mode }
 
 export interface Page {
   url?: string | undefined
@@ -13,10 +13,12 @@ export type Properties = Record<string, unknown>
 /** Event name → its properties. `undefined` in the union makes the properties optional. */
 export type EventMap = Record<string, Properties | undefined>
 
-/** A consent answer by scope. Scopes left out keep their last answer. */
+/** A consent answer. `statistics` is the only purpose; a key left out keeps its last answer. */
 export interface ConsentAnswer {
   statistics?: boolean
+  /** Deprecated and ignored: experiments are gone. Still accepted so existing consent calls keep working. */
   experiments?: boolean
+  /** Deprecated and ignored: statistics is the only purpose. Still accepted so existing consent calls keep working. */
   targeting?: boolean
 }
 
@@ -56,14 +58,6 @@ export interface Mira<Events extends EventMap = EventMap> {
   anonymousId(): string | undefined
   /** search */
   search(query: string): void
-  /** flags: the variant, or `true`/`false` for on/off flags. */
-  flag(key: string, fallback: string | boolean): string | boolean
-  /** flags */
-  config<T>(key: string, fallback: T): T
-  /** flags: runs when flags load or change, at once if they already have. */
-  onFlags(listener: () => void): () => void
-  /** flags: facts for targeting rules, held in memory and never sent. */
-  setFlagProperties(properties: Properties): void
 }
 
 /** An event as it sits in the queue. `beforeSend` hooks may change it. */
@@ -75,17 +69,6 @@ export interface MiraEvent {
   anonymousId?: string | undefined
   userId?: string | undefined
   sessionId?: string | undefined
-}
-
-/** What the flags plugin holds: a browser document, a values document or a bootstrap (FLAGS.md §3, §5.3). */
-export interface FlagState {
-  v?: number
-  at: number
-  flags?: Record<string, Flag>
-  values?: Record<string, FlagValue | Bootstrap["values"][string]>
-  orig?: readonly string[]
-  browser?: readonly string[]
-  unit?: string
 }
 
 /** Shared state. Plugins read it and write the parts they own. */
@@ -113,8 +96,6 @@ export interface MiraState {
   user?: { id: string; traits?: Properties | undefined } | undefined
   /** The stored anonymous id, minted if needed; `undefined` without a consent scope or under an opt-out (identity). */
   aid?: () => string | undefined
-  /** The flag state once loaded (flags). */
-  flags?: FlagState
 }
 
 export interface MiraHooks {
@@ -126,8 +107,6 @@ export interface MiraHooks {
   consent: (answer: ConsentAnswer) => void
   /** After identify() or reset() (identity). */
   user: () => void
-  /** After flags load or change (flags). */
-  flags: () => void
   /** Before each flush, including the one on page hide: queue what is pending now. */
   flush: () => void
 }
@@ -180,8 +159,6 @@ export interface Globals {
   __mirafive_boot?: unknown
   __mirafive_consent?: false | ConsentAnswer
   __mirafive_ignore?: unknown
-  __mirafive_aid_next?: string | undefined
-  __mirafive_experiments?: SnippetEntry[]
   navigation?: EventTarget
 }
 

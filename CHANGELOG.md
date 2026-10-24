@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+- **Breaking:** feature flags and A/B experiments are removed. The `flags` and
+  `experiments` plugins and their entries `@mirafive/sdk-browser/flags` and
+  `/experiments` are gone, with `flag()`, `config()`, `onFlags()`, `setFlagProperties()`,
+  the `FlagBootstrap` and `FlagState` types, the `flags` hook and state, and the
+  `window.__mirafive_experiments` and `__mirafive_aid_next` globals. No `$exposure`
+  event is sent.
+- Statistics is the only consent purpose. The `experiments` and `targeting` scopes are
+  retired: `consent({ experiments, targeting })` and a preset `window.__mirafive_consent`
+  that holds them still work; the keys are ignored, never stored, and neither counts as
+  consent.
+
 ## 1.0.0 — 2026-09-27
 
 First release on the v1 ingest protocol, rebuilt from scratch around plugins.

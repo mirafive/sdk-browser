@@ -64,9 +64,7 @@ export const identity = (): Plugin => ({
       let id = read("aid", year)
 
       if (!id) {
-        // A snippet may have drawn an experiment on a pending id; it becomes the anonymous id, once.
-        id = w.__mirafive_aid_next || core.uuid()
-        w.__mirafive_aid_next = undefined
+        id = core.uuid()
       }
 
       return write("aid", id)
@@ -98,8 +96,14 @@ export const identity = (): Plugin => ({
     }
 
     const consent = (answer: boolean | ConsentAnswer): void => {
+      // A site may still pass the retired `experiments` and `targeting` keys: they are dropped, never stored.
+      const {
+        experiments: _experiments,
+        targeting: _targeting,
+        ...scopes
+      } = typeof answer === "object" ? answer : {}
       const now: ConsentAnswer = (state.consent =
-        answer === false ? {} : { ...state.consent, ...(answer === true ? { statistics: true } : answer) })
+        answer === false ? {} : { ...state.consent, ...(answer === true ? { statistics: true } : scopes) })
 
       // Known before the landing pageview was attempted: the page drew with the answer.
       state.boot ??= state.page ? 0 : 1

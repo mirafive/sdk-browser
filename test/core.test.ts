@@ -560,30 +560,16 @@ describe("plugins", () => {
     client.consent(true)
     client.consent(true)
     client.identify("u_1")
-    expect(client.flag("x", "fallback")).toBe("fallback")
-    expect(client.config("x", { max: 1 })).toEqual({ max: 1 })
     expect(client.anonymousId()).toBeUndefined()
-    const off = client.onFlags(() => undefined)
-
-    off()
     client.search("shoes")
     client.reset()
-    client.setFlagProperties({})
     await client.flush()
 
     expect(requests).toHaveLength(0)
     expect(warnings()).toEqual(
-      [
-        "consent",
-        "identify",
-        "flag",
-        "config",
-        "anonymousId",
-        "onFlags",
-        "search",
-        "reset",
-        "setFlagProperties"
-      ].map((name) => `[mirafive] ${name}() needs its plugin`)
+      ["consent", "identify", "anonymousId", "search", "reset"].map(
+        (name) => `[mirafive] ${name}() needs its plugin`
+      )
     )
   })
 

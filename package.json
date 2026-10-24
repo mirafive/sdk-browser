@@ -3,10 +3,8 @@
   "version": "1.0.0",
   "description": "MIRA FIVE browser SDK",
   "keywords": [
-    "ab-testing",
     "analytics",
     "cookieless",
-    "feature-flags",
     "gdpr",
     "mirafive",
     "privacy"
@@ -32,8 +30,6 @@
     "./identity": "./dist/identity.js",
     "./autocapture": "./dist/autocapture.js",
     "./search": "./dist/search.js",
-    "./flags": "./dist/flags.js",
-    "./experiments": "./dist/experiments.js",
     "./package.json": "./package.json"
   },
   "publishConfig": {
@@ -109,41 +105,23 @@
       "limit": "0.42 kB"
     },
     {
-      "name": "flags",
-      "path": "dist/flags.js",
-      "import": "{ flags }",
-      "gzip": true,
-      "limit": "3.01 kB"
-    },
-    {
-      "name": "experiments",
-      "path": "dist/experiments.js",
-      "import": "{ experiments }",
-      "gzip": true,
-      "limit": "0.49 kB"
-    },
-    {
       "name": "everything",
       "path": [
         "dist/index.js",
         "dist/pageviews.js",
         "dist/identity.js",
         "dist/autocapture.js",
-        "dist/search.js",
-        "dist/flags.js",
-        "dist/experiments.js"
+        "dist/search.js"
       ],
       "import": {
         "dist/index.js": "{ createMira }",
         "dist/pageviews.js": "{ pageviews }",
         "dist/identity.js": "{ identity }",
         "dist/autocapture.js": "{ autocapture }",
-        "dist/search.js": "{ siteSearch }",
-        "dist/flags.js": "{ flags }",
-        "dist/experiments.js": "{ experiments }"
+        "dist/search.js": "{ siteSearch }"
       },
       "gzip": true,
-      "limit": "7.52 kB"
+      "limit": "4.72 kB"
     }
   ],
   "engines": {
@@ -153,7 +131,6 @@
   "mirafive": {
     "protocol": [
       "clean-url",
-      "evaluate",
       "key",
       "types"
     ]

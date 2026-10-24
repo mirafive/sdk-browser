@@ -7,9 +7,7 @@ export default defineConfig({
     pageviews: "src/pageviews.ts",
     identity: "src/identity.ts",
     autocapture: "src/autocapture.ts",
-    search: "src/search.ts",
-    flags: "src/flags.ts",
-    experiments: "src/experiments.ts"
+    search: "src/search.ts"
   },
   format: "esm",
   platform: "browser",

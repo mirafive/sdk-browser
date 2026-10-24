@@ -1,9 +1,8 @@
 import { describe, expect, it, vi } from "vitest"
 
 import { autocapture } from "../src/autocapture.ts"
-import { flags } from "../src/flags.ts"
 import { pageviews } from "../src/pageviews.ts"
-import { batches, json, mira, route, tick } from "./helpers.ts"
+import { batches, mira, tick } from "./helpers.ts"
 
 describe("consentless mode", () => {
   it("never reads language, time zone or screen, and never touches storage or cookies", async () => {
@@ -41,20 +40,14 @@ describe("consentless mode", () => {
     const zone = vi.spyOn(Intl, "DateTimeFormat")
     const resolved = vi.spyOn(Intl.DateTimeFormat.prototype, "resolvedOptions")
 
-    route((request) =>
-      request.url.includes("/v1/flags/")
-        ? json({ v: 1, at: Date.now(), values: { beta: ["on"] } })
-        : undefined
-    )
     document.body.innerHTML = `<button>Buy</button>`
-    const client = await mira({ plugins: [pageviews(), autocapture(), flags()] })
+    const client = await mira({ plugins: [pageviews(), autocapture()] })
 
     await tick()
     history.pushState({}, "", "/checkout")
     await tick()
     document.querySelector("button")?.click()
     client.track("signup", { plan: "pro" })
-    client.flag("beta", false)
     client.consent(true)
     client.identify("u_1")
     await client.flush()

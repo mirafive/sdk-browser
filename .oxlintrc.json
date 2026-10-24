@@ -26,13 +26,7 @@
     "no-underscore-dangle": [
       "error",
       {
-        "allow": [
-          "__mirafive_boot",
-          "__mirafive_consent",
-          "__mirafive_ignore",
-          "__mirafive_aid_next",
-          "__mirafive_experiments"
-        ]
+        "allow": ["__mirafive_boot", "__mirafive_consent", "__mirafive_ignore"]
       }
     ]
   },

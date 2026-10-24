@@ -1,9 +1,8 @@
 # Agents working in mirafive/sdk-browser
 
 `@mirafive/sdk-browser`: the browser SDK (core plus one plugin entry per feature). Part
-of the MIRA FIVE SDK family; the wire contract, flag semantics and public API live in
-[mirafive/protocol](https://github.com/mirafive/protocol) (PROTOCOL.md, FLAGS.md,
-API.md).
+of the MIRA FIVE SDK family; the wire contract and public API live in
+[mirafive/protocol](https://github.com/mirafive/protocol) (PROTOCOL.md, API.md).
 
 ## Commands
 

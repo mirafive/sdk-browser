@@ -28,18 +28,6 @@
       "sessionId": "0192d4a8-7b1c-4e8a-9c1d-000000000001"
     },
     {
-      "name": "$exposure",
-      "time": 1727430000000,
-      "properties": {
-        "$experiment": "hero",
-        "$variant": "b",
-        "$boot": 1,
-        "$snippet": "8624a0de"
-      },
-      "anonymousId": "0199a3f2-7c1e-7a4b-9f00-000000000005",
-      "sessionId": "0192d4a8-7b1c-4e8a-9c1d-000000000001"
-    },
-    {
       "name": "$autocapture",
       "time": 1727430012000,
       "page": {

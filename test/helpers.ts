@@ -85,7 +85,7 @@ export const fetchMock = vi.fn(async (input: string | URL, init?: RequestInit): 
     return json({ batch, accepted: events.length, dropped: 0 }, 202)
   }
 
-  return json({ code: "not_found", detail: "No flags." }, 404)
+  return json({ code: "not_found", detail: "Not found." }, 404)
 })
 
 /** The batches sent so far, parsed; each was checked against the protocol's batch schema. */
