@@ -33,7 +33,10 @@ describe("consentless mode", () => {
     Object.defineProperty(document, "cookie", {
       configurable: true,
       get: () => (touched.push("cookie"), cookie?.get?.call(document)),
-      set: (value: string) => (touched.push("cookie"), cookie?.set?.call(document, value))
+      set: (value: string) => {
+        touched.push("cookie")
+        cookie?.set?.call(document, value)
+      }
     })
     const zone = vi.spyOn(Intl, "DateTimeFormat")
     const resolved = vi.spyOn(Intl.DateTimeFormat.prototype, "resolvedOptions")
