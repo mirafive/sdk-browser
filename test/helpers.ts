@@ -11,7 +11,7 @@ import type { Globals } from "../src/types.ts"
 
 export const KEY = "mf_ab12cd34_0123456789abcdefghijklmnop"
 export const NS = "mf_ab12cd34"
-export const HOST = "https://events.mirafive.io"
+export const HOST = "https://collect.mirafive.io"
 
 const validate = new Ajv2020({ strict: true, allErrors: true }).compile(
   JSON.parse(readFileSync(join(import.meta.dirname, "fixtures/batch.schema.json"), "utf8")) as object

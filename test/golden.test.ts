@@ -13,7 +13,7 @@ import { NS, define, mira, requests, tick, w } from "./helpers.ts"
 
 // Copied unchanged from mirafive/protocol; a changed file must come from there.
 const pinned: Record<string, string> = {
-  "batch.schema.json": "4fdfb284b66c1e11155521509c6a9ad501c6ddd136a5ee31300bb07013dde0b6"
+  "batch.schema.json": "5026f7f0325647b19b91497e64ca4370efa614920f6c51271587bffc426ba330"
 }
 const protocol: Record<string, string> = {
   "batch.schema.json": "schema"

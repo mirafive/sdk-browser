@@ -41,8 +41,14 @@ const mira = createMira({
 mira.track("signup", { plan: "pro" })
 ```
 
+For revenue, send `revenue`, `currency` and `payment_id`, the payment provider's id (1–255
+characters). On a Stripe success page pass the Checkout Session id, for example
+`mira.track("order completed", { revenue: 49, currency: "EUR", payment_id: sessionId })`.
+MIRA FIVE merges the event with the payment it imports from your connected Stripe account,
+so the sale counts once.
+
 Verify it: open the site (not `localhost`, or pass `trackLocalhost: true`), then look
-for `POST https://events.mirafive.io/v1/batch/mf_…` in the browser's network tab
+for `POST https://collect.mirafive.io/v1/batch/mf_…` in the browser's network tab
 answering `202` with `"accepted": 1`, and for the pageview in the source's live view in
 MIRA FIVE.
 
@@ -116,7 +122,7 @@ import { siteSearch } from "@mirafive/sdk-browser/search"
 | Option | Default | |
 |---|---|---|
 | `key` | required | the source's website key |
-| `host` | `https://events.mirafive.io` | must have a scheme |
+| `host` | `https://collect.mirafive.io` | must have a scheme |
 | `mode` | `"consentless"` | `"full"` needs `identity()` |
 | `plugins` | `[]` | |
 | `flushAt` | `20` | send once this many events are queued, 1–1000 (each batch also stays under ~48 KB) |
@@ -254,7 +260,7 @@ grant are dropped as usual (the landing pageview is resent either way).
   releases the page, so React StrictMode's mount, unmount and mount works.
 - For React, Next.js, Vue, Nuxt, Astro and TanStack use the MIRA FIVE framework
   packages (`@mirafive/sdk-react`, …); they wrap this client.
-- CSP: `connect-src https://events.mirafive.io` (or your `host`).
+- CSP: `connect-src https://collect.mirafive.io` (or your `host`).
 - Batches are `text/plain` POSTs (no CORS preflight); on page hide they go by
   `navigator.sendBeacon`, else `fetch` with `keepalive`; a batch still in flight is sent
   again by beacon (its batch id makes the copy count once). A failed send is tried up to
@@ -295,7 +301,7 @@ Add MIRA FIVE analytics to this site with @mirafive/sdk-browser.
    pass mode: "full", and call mira.consent({ statistics }) from
    the consent manager's callback.
 5. Verify: load a page (not localhost, or pass trackLocalhost: true) and check the network
-   tab for POST https://events.mirafive.io/v1/batch/<key> answering 202; report what you
+   tab for POST https://collect.mirafive.io/v1/batch/<key> answering 202; report what you
    changed.
 Do not add other analytics libraries, cookies or consent banners.
 ```

@@ -445,7 +445,7 @@ describe("options", () => {
   it("refuses a host without a scheme", async () => {
     const { createMira } = await load()
 
-    expect(() => createMira({ key: KEY, host: "events.mirafive.io" })).toThrow(/host needs a scheme/)
+    expect(() => createMira({ key: KEY, host: "collect.mirafive.io" })).toThrow(/host needs a scheme/)
   })
 
   it('refuses mode "full" without identity()', async () => {

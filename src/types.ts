@@ -25,7 +25,7 @@ export interface ConsentAnswer {
 export interface MiraOptions {
   /** The source's public website key (`mf_…`). */
   key: string
-  /** Default `https://events.mirafive.io`. */
+  /** Default `https://collect.mirafive.io`. */
   host?: string
   /** Default `"consentless"`. `"full"` needs the `identity()` plugin. */
   mode?: Mode
